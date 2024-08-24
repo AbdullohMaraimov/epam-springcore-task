@@ -8,4 +8,5 @@ public record TraineeRequest(
         LocalDate dateOfBirth,
         String address,
         boolean isActive
-) {}
+) {
+}

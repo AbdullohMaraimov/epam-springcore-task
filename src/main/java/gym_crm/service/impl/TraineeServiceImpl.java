@@ -15,6 +15,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TraineeServiceImpl implements TraineeService {
 
+
     private final TraineeMapper traineeMapper;
     private final TraineeDAO traineeDAO;
 

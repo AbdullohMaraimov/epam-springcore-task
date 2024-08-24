@@ -13,9 +13,13 @@ import gym_crm.service.TrainingService;
 import gym_crm.service.impl.TraineeServiceImpl;
 import gym_crm.service.impl.TrainerServiceImpl;
 import gym_crm.service.impl.TrainingServiceImpl;
+import gym_crm.util.DataInitializer;
+import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -24,6 +28,18 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebMvc
 @ComponentScan(basePackages = "gym_crm")
 public class AppConfig implements WebMvcConfigurer {
+
+    @Bean(initMethod = "initAll")
+    public DataInitializer dataInitializer() {
+        return new DataInitializer(traineeService(), trainerService(), trainingService());
+    }
+
+    @Bean
+    public static PropertyPlaceholderConfigurer propertyPlaceholderConfigurer() {
+        PropertyPlaceholderConfigurer configurer = new PropertyPlaceholderConfigurer();
+        configurer.setLocation(new ClassPathResource("application.properties"));
+        return configurer;
+    }
 
     @Bean
     public ObjectMapper objectMapper() {

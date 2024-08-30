@@ -56,7 +56,9 @@ class TraineeControllerTest {
 
         assertEquals(204, response.statusCode());
         assertEquals("Trainee updated", response.message());
+
         verify(traineeService, times(1)).update(eq(username), any(TraineeRequest.class));
+        verifyNoMoreInteractions(traineeService);
     }
 
     @Test
@@ -73,6 +75,7 @@ class TraineeControllerTest {
         assertEquals("Trainee found", response.message());
         assertEquals(traineeResponse, response.data());
         verify(traineeService, times(1)).findByUsername(username);
+        verifyNoMoreInteractions(traineeService);
     }
 
     @Test
@@ -92,6 +95,7 @@ class TraineeControllerTest {
         assertEquals("Trainees found", response.message());
         assertEquals(trainees, response.data());
         verify(traineeService, times(1)).findAll();
+        verifyNoMoreInteractions(traineeService);
     }
 
     @Test
@@ -106,6 +110,7 @@ class TraineeControllerTest {
         assertEquals(204, response.statusCode());
         assertEquals("Deleted successfully!", response.message());
         verify(traineeService, times(1)).delete(username);
+        verifyNoMoreInteractions(traineeService);
     }
 
     @Test
@@ -119,5 +124,6 @@ class TraineeControllerTest {
         assertEquals(204, response.statusCode());
         assertEquals("All trainees deleted", response.message());
         verify(traineeService, times(1)).deleteAll();
+        verifyNoMoreInteractions(traineeService);
     }
 }

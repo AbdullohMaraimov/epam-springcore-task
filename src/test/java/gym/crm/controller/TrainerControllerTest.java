@@ -41,6 +41,7 @@ class TrainerControllerTest {
         assertEquals(204, response.statusCode());
         assertEquals("Trainer created", response.message());
         verify(trainerService, times(1)).create(any(TrainerRequest.class));
+        verifyNoMoreInteractions(trainerService);
     }
 
     @Test
@@ -56,7 +57,9 @@ class TrainerControllerTest {
         assertEquals(200, response.statusCode());
         assertEquals("Trainer found", response.message());
         assertEquals(trainerResponse, response.data());
+
         verify(trainerService, times(1)).findByUsername(username);
+        verifyNoMoreInteractions(trainerService);
     }
 
     @Test
@@ -75,7 +78,9 @@ class TrainerControllerTest {
         assertEquals(200, response.statusCode());
         assertEquals("Trainers found", response.message());
         assertEquals(trainers, response.data());
+
         verify(trainerService, times(1)).findAll();
+        verifyNoMoreInteractions(trainerService);
     }
 
     @Test
@@ -90,6 +95,8 @@ class TrainerControllerTest {
 
         assertEquals(204, response.statusCode());
         assertEquals("Trainer updated", response.message());
+
         verify(trainerService, times(1)).update(eq(username), any(TrainerRequest.class));
+        verifyNoMoreInteractions(trainerService);
     }
 }

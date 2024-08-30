@@ -49,34 +49,47 @@ class TrainerServiceImplTest {
 
         assertEquals("Username already exists, so changed it to alivali0", response.message());
         assertEquals("alivali0", trainer.getUsername());
-        verify(trainerDAO).save(trainer);
+
+        verify(trainerMapper, times(1)).toTrainer(trainerRequest);
+        verify(trainerDAO, times(1)).isUsernameExists(anyString());
+        verify(trainerDAO, times(1)).save(trainer);
+        verifyNoMoreInteractions(trainerMapper, trainerDAO);
     }
 
     @Test
     void testUsernameSuccess() {
         TrainerRequest trainerRequest = new TrainerRequest("ali", "vali", "bodybuilder");
         Trainer trainer = new Trainer();
-        trainer.setUsername("alivali");
+        trainer.setUsername("ali.vali");
 
         when(trainerMapper.toTrainer(trainerRequest)).thenReturn(trainer);
-        when(trainerDAO.isUsernameExists("alivali")).thenReturn(false);
+        when(trainerDAO.isUsernameExists("ali.vali")).thenReturn(false);
 
         ApiResponse<Void> response = trainerService.create(trainerRequest);
 
         assertEquals("Saved successfully!", response.message());
+        verify(trainerMapper, times(1)).toTrainer(trainerRequest);
+        verify(trainerDAO, times(1)).isUsernameExists("ali.vali");
+        verify(trainerDAO, times(1)).save(trainer);
+        verifyNoMoreInteractions(trainerMapper, trainerDAO);
     }
 
     @Test
     void createTrainerExistsTest() {
         TrainerRequest trainerRequest = new TrainerRequest("jakie", "chan", "bodybuilder");
         Trainer trainer = new Trainer();
+        trainer.setUsername("jakie.chan");
 
         when(trainerMapper.toTrainer(trainerRequest)).thenReturn(trainer);
         when(trainerDAO.isUsernameExists(trainer.getUsername())).thenReturn(true);
 
         ApiResponse<Void> response = trainerService.create(trainerRequest);
-        verify(trainerDAO).save(trainer);
         assertEquals("Username already exists, so changed it to " + trainer.getUsername(), response.message());
+
+        verify(trainerMapper, times(1)).toTrainer(trainerRequest);
+        verify(trainerDAO, times(1)).isUsernameExists("jakie.chan");
+        verify(trainerDAO, times(1)).save(trainer);
+        verifyNoMoreInteractions(trainerMapper, trainerDAO);
     }
     @Test
     void createTrainerSuccessfulTest() {
@@ -87,8 +100,13 @@ class TrainerServiceImplTest {
         when(trainerDAO.isUsernameExists(trainer.getUsername())).thenReturn(false);
 
         ApiResponse<Void> response = trainerService.create(trainerRequest);
-        verify(trainerDAO).save(trainer);
+
         assertEquals("Saved successfully!", response.message());
+
+        verify(trainerMapper, times(1)).toTrainer(trainerRequest);
+        verify(trainerDAO, times(1)).isUsernameExists(trainer.getUsername());
+        verify(trainerDAO, times(1)).save(trainer);
+        verifyNoMoreInteractions(trainerMapper, trainerDAO);
     }
 
     @Test
@@ -105,7 +123,9 @@ class TrainerServiceImplTest {
 
         assertEquals("Trainer not found!", exception.getMessage());
 
+        verify(trainerDAO, times(1)).isUsernameExists(trainer.getUsername());
         verify(trainerDAO, never()).update(trainer);
+        verifyNoMoreInteractions(trainerMapper, trainerDAO);
     }
 
     @Test
@@ -116,13 +136,29 @@ class TrainerServiceImplTest {
         });
 
         assertEquals("Trainer not found!", exception.getMessage());
+        verify(trainerDAO, times(1)).isUsernameExists("username");
+        verifyNoMoreInteractions(trainerMapper, trainerDAO);
     }
 
     @Test
     void findByUsernameSuccess() {
-        when(trainerDAO.isUsernameExists("username")).thenReturn(true);
-        ApiResponse<TrainerResponse> response = trainerService.findByUsername("username");
-        assertEquals(response.message(), "Successfully found!");
+        String username = "username";
+        Trainer trainer = new Trainer();
+        TrainerResponse trainerResponse = new TrainerResponse("a", "b", "c", "f", "a", true);
+
+        when(trainerDAO.isUsernameExists(username)).thenReturn(true);
+        when(trainerDAO.findByUsername(username)).thenReturn(trainer);
+        when(trainerMapper.toTrainerResponse(trainer)).thenReturn(trainerResponse);
+
+        ApiResponse<TrainerResponse> response = trainerService.findByUsername(username);
+
+        assertEquals("Successfully found!", response.message());
+        assertEquals(trainerResponse, response.data());
+
+        verify(trainerDAO, times(1)).isUsernameExists(username);
+        verify(trainerDAO, times(1)).findByUsername(username);
+        verify(trainerMapper, times(1)).toTrainerResponse(trainer);
+        verifyNoMoreInteractions(trainerMapper, trainerDAO);
     }
 
     @Test
@@ -131,6 +167,8 @@ class TrainerServiceImplTest {
         CustomNotFoundException exception = assertThrows(CustomNotFoundException.class,
                 () -> trainerService.findAll());
         assertEquals("Trainer not found!",  exception.getMessage());
+        verify(trainerDAO, times(1)).isTrainerDBEmpty();
+        verifyNoMoreInteractions(trainerMapper, trainerDAO);
     }
 
     @Test
@@ -152,5 +190,10 @@ class TrainerServiceImplTest {
 
         assertEquals(trainerResponses, response.data());
         assertEquals("Success!", response.message());
+
+        verify(trainerDAO, times(1)).isTrainerDBEmpty();
+        verify(trainerDAO, times(1)).findAll();
+        verify(trainerMapper, times(1)).toTrainerResponses(trainers);
+        verifyNoMoreInteractions(trainerMapper, trainerDAO);
     }
 }

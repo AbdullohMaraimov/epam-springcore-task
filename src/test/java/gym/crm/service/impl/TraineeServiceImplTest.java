@@ -17,8 +17,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class TraineeServiceImplTest {
 
@@ -40,15 +39,19 @@ class TraineeServiceImplTest {
     void testCreateUsernameAlreadyExists() {
         TraineeRequest request = new TraineeRequest("ali", "valiev", LocalDate.now(), "A232", true);
         Trainee trainee = new Trainee();
-        trainee.setUsername("existingUsername");
+        trainee.setUsername("ali.valiev");
 
         when(traineeMapper.toTrainee(request)).thenReturn(trainee);
         when(traineeDAO.isUsernameExists(trainee.getUsername())).thenReturn(true);
 
         ApiResponse<Void> response = traineeService.create(request);
 
-        verify(traineeDAO).save(trainee);
         assertEquals("Username already exists, so changed it to " + trainee.getUsername(), response.message());
+
+        verify(traineeMapper, times(1)).toTrainee(request);
+        verify(traineeDAO, times(1)).isUsernameExists("ali.valiev");
+        verify(traineeDAO, times(1)).save(trainee);
+        verifyNoMoreInteractions(traineeMapper, traineeDAO);
     }
 
     @Test
@@ -62,8 +65,12 @@ class TraineeServiceImplTest {
 
         ApiResponse<Void> response = traineeService.create(request);
 
-        verify(traineeDAO).save(trainee);
         assertEquals("Saved successfully!", response.message());
+
+        verify(traineeMapper, times(1)).toTrainee(request);
+        verify(traineeDAO, times(1)).isUsernameExists(trainee.getUsername());
+        verify(traineeDAO, times(1)).save(trainee);
+        verifyNoMoreInteractions(traineeMapper, traineeDAO);
     }
 
     @Test
@@ -78,8 +85,13 @@ class TraineeServiceImplTest {
 
         ApiResponse<Void> response = traineeService.update("username", request);
 
-        verify(traineeDAO).update(updatedTrainee);
         assertEquals("Successfully updated!", response.message());
+
+        verify(traineeDAO, times(1)).isUsernameExists("username");
+        verify(traineeDAO, times(1)).findByUsername("username");
+        verify(traineeMapper, times(1)).toUpdatedTrainee(trainee, request);
+        verify(traineeDAO, times(1)).update(updatedTrainee);
+        verifyNoMoreInteractions(traineeMapper, traineeDAO);
     }
 
     @Test
@@ -92,14 +104,21 @@ class TraineeServiceImplTest {
         });
 
         assertEquals("Trainee with id username not found", exception.getMessage());
+
+        verify(traineeDAO, times(1)).isUsernameExists("username");
+        verifyNoMoreInteractions(traineeMapper, traineeDAO);
     }
 
     @Test
     public void testDeleteSuccess() {
         when(traineeDAO.isUsernameExists("username")).thenReturn(true);
         ApiResponse<Void> response = traineeService.delete("username");
-        verify(traineeDAO).delete("username");
+
         assertEquals("Deleted successfully!", response.message());
+
+        verify(traineeDAO, times(1)).isUsernameExists("username");
+        verify(traineeDAO, times(1)).delete("username");
+        verifyNoMoreInteractions(traineeDAO);
     }
 
     @Test
@@ -110,6 +129,9 @@ class TraineeServiceImplTest {
         });
 
         assertEquals("No Trainee found!", exception.getMessage());
+
+        verify(traineeDAO, times(1)).isUsernameExists("username");
+        verifyNoMoreInteractions(traineeDAO);
     }
 
     @Test
@@ -125,6 +147,11 @@ class TraineeServiceImplTest {
 
         assertEquals("Successfully found!", response.message());
         assertEquals(traineeResponse, response.data());
+
+        verify(traineeDAO, times(1)).isUsernameExists("username");
+        verify(traineeDAO, times(1)).findByUsername("username");
+        verify(traineeMapper, times(1)).toTraineeResponse(trainee);
+        verifyNoMoreInteractions(traineeMapper, traineeDAO);
     }
 
     @Test
@@ -135,6 +162,8 @@ class TraineeServiceImplTest {
         });
 
         assertEquals("Trainee not found!", exception.getMessage());
+        verify(traineeDAO, times(1)).isUsernameExists("username");
+        verifyNoMoreInteractions(traineeDAO);
     }
 
     @Test
@@ -150,6 +179,11 @@ class TraineeServiceImplTest {
 
         assertEquals("Success!", response.message());
         assertEquals(traineeResponses, response.data());
+
+        verify(traineeDAO, times(1)).isTraineeDBEmpty();
+        verify(traineeDAO, times(1)).findAll();
+        verify(traineeMapper, times(1)).toTraineeResponses(trainees);
+        verifyNoMoreInteractions(traineeMapper, traineeDAO);
     }
 
     @Test
@@ -159,12 +193,16 @@ class TraineeServiceImplTest {
             traineeService.findAll();
         });
         assertEquals("Trainee not found!", exception.getMessage());
+        verify(traineeDAO, times(1)).isTraineeDBEmpty();
+        verifyNoMoreInteractions(traineeDAO);
     }
 
     @Test
     public void testDeleteAll() {
         ApiResponse<Void> response = traineeService.deleteAll();
-        verify(traineeDAO).deleteAll();
         assertEquals("All Trainees deleted!", response.message());
+
+        verify(traineeDAO, times(1)).deleteAll();
+        verifyNoMoreInteractions(traineeDAO);
     }
 }

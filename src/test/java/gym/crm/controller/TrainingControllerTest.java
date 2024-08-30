@@ -43,7 +43,9 @@ class TrainingControllerTest {
 
         assertEquals(204, response.statusCode());
         assertEquals("Training created", response.message());
+
         verify(trainingService, times(1)).create(any(TrainingRequest.class));
+        verifyNoMoreInteractions(trainingService);
     }
 
     @Test
@@ -59,7 +61,9 @@ class TrainingControllerTest {
         assertEquals(200, response.statusCode());
         assertEquals("Training found", response.message());
         assertEquals(trainingResponse, response.data());
+
         verify(trainingService, times(1)).findById(id);
+        verifyNoMoreInteractions(trainingService);
     }
 
     @Test
@@ -78,6 +82,8 @@ class TrainingControllerTest {
         assertEquals(200, response.statusCode());
         assertEquals("Trainings found", response.message());
         assertEquals(trainings, response.data());
+
         verify(trainingService, times(1)).findAll();
+        verifyNoMoreInteractions(trainingService);
     }
 }

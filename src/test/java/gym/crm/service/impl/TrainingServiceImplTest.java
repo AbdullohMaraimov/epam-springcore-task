@@ -58,7 +58,12 @@ class TrainingServiceImplTest {
 
         assertEquals(true, response.success());
         assertEquals("Training created successfully!", response.message());
-        verify(trainingDAO).save(training);
+
+        verify(trainerDAO, times(1)).isUsernameExists("trainer1");
+        verify(traineeDAO, times(1)).isUsernameExists("trainee1");
+        verify(trainingMapper, times(1)).toEntity(trainingRequest);
+        verify(trainingDAO, times(1)).save(training);
+        verifyNoMoreInteractions(trainerDAO, traineeDAO, trainingMapper, trainingDAO);
     }
 
     @Test
@@ -74,7 +79,10 @@ class TrainingServiceImplTest {
 
         assertEquals("Trainer or Trainee does not exist!", exception.getMessage());
 
+        verify(trainerDAO, times(1)).isUsernameExists("trainer1");
+        verify(traineeDAO, times(0)).isUsernameExists("trainee1");
         verify(trainingDAO, never()).save(any());
+        verifyNoMoreInteractions(trainerDAO, traineeDAO, trainingDAO);
     }
 
     @Test
@@ -84,13 +92,32 @@ class TrainingServiceImplTest {
             trainingService.findById("id");
         });
         assertEquals("Training not found!", exception.getMessage());
+
+        verify(trainingDAO, times(1)).isTrainingExist("id");
+        verifyNoMoreInteractions(trainingDAO);
     }
 
     @Test
     void findByIdSuccess() {
-        when(trainingDAO.isTrainingExist("id")).thenReturn(true);
-        ApiResponse<TrainingResponse> response = trainingService.findById("id");
+        String trainingId = "id";
+        Training training = new Training();
+        TrainingResponse trainingResponse = new TrainingResponse(
+                "", "", "", "", TrainingType.STANDARD, LocalDate.now(), Duration.ZERO
+        );
+
+        when(trainingDAO.isTrainingExist(trainingId)).thenReturn(true);
+        when(trainingDAO.findById(trainingId)).thenReturn(training);
+        when(trainingMapper.toResponse(training)).thenReturn(trainingResponse);
+
+        ApiResponse<TrainingResponse> response = trainingService.findById(trainingId);
+
         assertEquals("Successfully found", response.message());
+        assertEquals(trainingResponse, response.data());
+
+        verify(trainingDAO, times(1)).isTrainingExist(trainingId);
+        verify(trainingDAO, times(1)).findById(trainingId);
+        verify(trainingMapper, times(1)).toResponse(training);
+        verifyNoMoreInteractions(trainingDAO, trainingMapper);
     }
 
     @Test
@@ -99,6 +126,8 @@ class TrainingServiceImplTest {
         CustomNotFoundException exception = assertThrows(CustomNotFoundException.class,
                 () -> trainingService.findAll());
         assertEquals("Training not found!", exception.getMessage());
+        verify(trainingDAO, times(1)).isTrainingDBEmpty();
+        verifyNoMoreInteractions(trainingDAO);
     }
 
     @Test
@@ -118,5 +147,10 @@ class TrainingServiceImplTest {
         assertEquals(true, response.success());
         assertEquals("Success!", response.message());
         assertEquals(trainingResponses, response.data());
+
+        verify(trainingDAO, times(1)).isTrainingDBEmpty();
+        verify(trainingDAO, times(1)).findAll();
+        verify(trainingMapper, times(1)).toResponses(trainings);
+        verifyNoMoreInteractions(trainingDAO, trainingMapper);
     }
 }

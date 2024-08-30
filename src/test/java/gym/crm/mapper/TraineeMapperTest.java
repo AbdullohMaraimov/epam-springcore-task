@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.*;
 
 class TraineeMapperTest {
 
@@ -46,6 +46,8 @@ class TraineeMapperTest {
         assertEquals("USA", trainee.getAddress());
         assertEquals("Iman.Gadzhi", trainee.getUsername());
         assertEquals(true, trainee.getIsActive());
+
+        passwordGeneratorMockedStatic.verify(PasswordGenerator::generatePassword, times(1));
     }
 
     @Test
@@ -98,6 +100,7 @@ class TraineeMapperTest {
         List<TraineeResponse> traineeResponses = traineeMapper.toTraineeResponses(trainees);
 
         assertEquals(2, traineeResponses.size());
+
     }
 
     @Test
@@ -127,5 +130,6 @@ class TraineeMapperTest {
         assertEquals("UZB", updatedTrainee.getAddress());
         assertEquals(LocalDate.of(2000, 1, 1), updatedTrainee.getDateOfBirth());
         assertEquals(true, updatedTrainee.getIsActive());
+
     }
 }

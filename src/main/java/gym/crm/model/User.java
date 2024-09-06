@@ -1,5 +1,7 @@
 package gym.crm.model;
 
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -8,7 +10,11 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
+@MappedSuperclass
 public abstract class User {
+
+    @Id
+    private Long id;
 
     private String firstName;
 

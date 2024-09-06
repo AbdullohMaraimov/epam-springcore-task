@@ -1,6 +1,8 @@
 package gym.crm.repository;
 
 import gym.crm.model.Trainee;
+import lombok.RequiredArgsConstructor;
+import org.springframework.orm.hibernate5.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
@@ -8,14 +10,17 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
+@RequiredArgsConstructor
 public class TraineeDAO {
 
     public static int index = 1;
-
     private final Map<String, Trainee> traineeDB = new HashMap<>();
 
+    private HibernateTemplate template;
+
+
     public void save(Trainee trainee) {
-        traineeDB.put(trainee.getUsername(), trainee);
+        template.save(trainee);
     }
 
     public void update(Trainee trainee) {

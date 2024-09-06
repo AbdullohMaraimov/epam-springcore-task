@@ -45,7 +45,7 @@ public class DataInitializer {
 
         @PostConstruct
         public void initAll() {
-            log.error("Initializing data...");
+            log.info("Initializing data...");
             initTrainee();
             initTrainer();
             initTraining();

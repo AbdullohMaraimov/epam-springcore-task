@@ -6,11 +6,11 @@ import java.time.Duration;
 import java.time.LocalDate;
 
 public record TrainingResponse(
-        String trainingId,
-        String traineeId,
-        String trainerId,
+        Long trainingId,
+        Long traineeId,
+        Long trainerId,
         String trainingName,
-        TrainingType trainingType,
+        String trainingTypeName,
         LocalDate trainingDate,
         Duration duration
 ) {}

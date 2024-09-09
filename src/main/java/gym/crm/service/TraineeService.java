@@ -1,6 +1,7 @@
 package gym.crm.service;
 
 import gym.crm.dto.reponse.ApiResponse;
+import gym.crm.dto.reponse.TrainerResponse;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.dto.reponse.TraineeResponse;
 
@@ -19,4 +20,12 @@ public interface TraineeService {
     ApiResponse<List<TraineeResponse>> findAll();
 
     ApiResponse<Void> deleteAll();
+
+    ApiResponse<Void> updatePassword(String username, String oldPassword, String newPassword);
+
+    ApiResponse<Void> deActivateUser(String username);
+
+    ApiResponse<Void> activateUser(String username);
+
+    ApiResponse<List<TrainerResponse>> findAllUnassignedTrainers(String username);
 }

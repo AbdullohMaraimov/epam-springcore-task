@@ -2,35 +2,51 @@ package gym.crm.mapper;
 
 import gym.crm.dto.reponse.TrainingResponse;
 import gym.crm.dto.request.TrainingRequest;
+import gym.crm.model.Trainee;
+import gym.crm.model.Trainer;
 import gym.crm.model.Training;
+import gym.crm.model.TrainingType;
+import gym.crm.repository.TraineeDAO;
+import gym.crm.repository.TrainerDAO;
+import gym.crm.repository.TrainingTypeDAO;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 public class TrainingMapper  {
+
+    private final TraineeDAO traineeDAO;
+    private final TrainerDAO trainerDAO;
+    private final TrainingTypeDAO trainingTypeDAO;
 
     public Training toEntity(TrainingRequest trainingRequest) {
         Training training = new Training();
-        training.setId(UUID.randomUUID().toString());
-        training.setTraineeId(trainingRequest.traineeId());
-        training.setTrainerId(trainingRequest.trainerId());
         training.setTrainingName(trainingRequest.trainingName());
-        training.setTrainingType(trainingRequest.trainingType());
         training.setTrainingDate(trainingRequest.trainingDate());
         training.setDuration(trainingRequest.duration());
+
+        Trainee trainee = traineeDAO.findById(trainingRequest.traineeId());
+        Trainer trainer = trainerDAO.findById(trainingRequest.trainerId());
+        TrainingType trainingType = trainingTypeDAO.findById(trainingRequest.trainingTypeId());
+
+        training.setTrainee(trainee);
+        training.setTrainer(trainer);
+        training.setTrainingType(trainingType);
+
         return training;
     }
 
     public TrainingResponse toResponse(Training training) {
         return new TrainingResponse(
                 training.getId(),
-                training.getTraineeId(),
-                training.getTrainerId(),
+                training.getTrainee().getId(),
+                training.getTrainer().getId(),
                 training.getTrainingName(),
-                training.getTrainingType(),
+                training.getTrainingType().getName(),
                 training.getTrainingDate(),
                 training.getDuration()
         );

@@ -1,5 +1,6 @@
 package gym.crm.model;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,17 +13,25 @@ import java.time.LocalDate;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity
 public class Training {
 
-    private String id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    private String traineeId;
+    @ManyToOne
+    @JoinColumn(name = "trainee_id", nullable = false)
+    private Trainee trainee;
 
-    private String trainerId;
+    @ManyToOne
+    @JoinColumn(name = "trainer_id", nullable = false)
+    private Trainer trainer;
 
     private String trainingName;
 
-    private TrainingType trainingType = TrainingType.STANDARD;
+    @ManyToOne
+    private TrainingType trainingType;
 
     private LocalDate trainingDate;
 

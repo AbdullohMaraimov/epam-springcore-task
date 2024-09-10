@@ -85,9 +85,9 @@ public class TrainingServiceImpl implements TrainingService {
     }
 
     @Override
-    public ApiResponse<List<TrainingResponse>> findTraineeTrainings(String username, LocalDate fromDate, LocalDate toDate, String trainerName, TrainingType trainingType) {
+    public ApiResponse<List<TrainingResponse>> findTraineeTrainings(String username, LocalDate fromDate, LocalDate toDate, String trainerName, Long trainingTypeId) {
         log.debug("Finding trainee trainings for username: {}", username);
-        List<Training> trainings = trainingDAO.findAllByCriteria(username, fromDate, toDate, trainerName, trainingType);
+        List<Training> trainings = trainingDAO.findAllByCriteria(username, fromDate, toDate, trainerName, trainingTypeId);
         List<TrainingResponse> responses = trainingMapper.toResponses(trainings);
         return new ApiResponse<>(200, responses, "Successfully found!", true);
     }

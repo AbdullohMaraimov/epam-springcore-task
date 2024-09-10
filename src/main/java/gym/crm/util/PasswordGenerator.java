@@ -4,7 +4,7 @@ import java.util.Random;
 
 public class PasswordGenerator {
 
-    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_-+=<>?";
+    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"; // !@#$%^&*()_-+=<>?
 
     public static String generatePassword() {
         Random random = new Random();
@@ -13,6 +13,7 @@ public class PasswordGenerator {
             int index = random.nextInt(CHARACTERS.length());
             password.append(CHARACTERS.charAt(index));
         }
+
         return password.toString();
     }
 

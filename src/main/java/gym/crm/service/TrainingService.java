@@ -16,7 +16,7 @@ public interface TrainingService {
 
     ApiResponse<List<TrainingResponse>> findAll();
 
-    ApiResponse<List<TrainingResponse>> findTraineeTrainings(String username, LocalDate fromDate, LocalDate toDate, String trainingName, TrainingType trainingType);
+    ApiResponse<List<TrainingResponse>> findTraineeTrainings(String username, LocalDate fromDate, LocalDate toDate, String trainingName, Long trainingTypeId);
 
     ApiResponse<List<TrainingResponse>> getTrainingsByTrainer(String username, LocalDate fromDate, LocalDate toDate, String traineeName);
 }

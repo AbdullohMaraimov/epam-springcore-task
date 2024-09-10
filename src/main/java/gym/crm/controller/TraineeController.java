@@ -25,12 +25,6 @@ public class TraineeController {
     private final TraineeService traineeService;
     private final TrainingService trainingService;
 
-    @PostMapping
-    public ApiResponse<Void> create(@Valid @RequestBody TraineeRequest request) {
-        log.info("Creating trainee: {}", request);
-        return traineeService.create(request);
-    }
-
     @PatchMapping("/{username}")
     public ApiResponse<Void> update(@PathVariable String username, @Valid @RequestBody TraineeRequest request) {
         log.info("Updating trainee with username {}: {}", username, request);
@@ -73,10 +67,10 @@ public class TraineeController {
     public ApiResponse<List<TrainingResponse>> getTraineeTrainings(@PathVariable String username,
                                                                    @RequestParam(required = false) LocalDate fromDate,
                                                                    @RequestParam(required = false) LocalDate toDate,
-                                                                   @RequestParam(required = false) String trainingName,
-                                                                   @RequestParam(required = false) TrainingType trainingType) {
-        log.info("Finding trainings for trainee {} from {} to {} with name {} and type {}", username, fromDate, toDate, trainingName, trainingType);
-        return trainingService.findTraineeTrainings(username, fromDate, toDate, trainingName, trainingType);
+                                                                   @RequestParam(required = false) String trainerUsername,
+                                                                   @RequestParam(required = false) Long trainingTypeId) {
+        log.info("Finding trainings for trainee {} from {} to {} with name {} and type {}", username, fromDate, toDate, trainerUsername, trainingTypeId);
+        return trainingService.findTraineeTrainings(username, fromDate, toDate, trainerUsername, trainingTypeId);
     }
 
     @GetMapping("/{username}/unassigned-trainers")

@@ -54,20 +54,20 @@ public class TrainingDAO {
         return count == 0;
     }
 
-    public List<Training> findAllByCriteria(String username, LocalDate fromDate, LocalDate toDate, String trainerName, TrainingType trainingType) {
-        String query = "FROM Training t JOIN t.trainee trainee JOIN t.trainer trainer " +
-                "WHERE trainee.username = :username " +
-                "AND (:fromDate IS NULL OR t.trainingDate >= :fromDate) " +
-                "AND (:toDate IS NULL OR t.trainingDate <= :toDate) " +
-                "AND (:trainerName IS NULL OR trainer.username = :trainerName) " +
-                "AND (:trainingType IS NULL OR t.trainingType = :trainingType)";
+    public List<Training> findAllByCriteria(String username, LocalDate fromDate, LocalDate toDate, String trainerUsername, Long trainingTypeId) {
+        String query = "from Training t join t.trainee trainee join t.trainer trainer " +
+                "where trainee.username = :username " +
+                "and (cast(:fromDate as date) is null or t.trainingDate >= :fromDate) " +
+                "and (cast(:toDate as date) is null or t.trainingDate <= :toDate) " +
+                "and (:trainerUsername is null or trainer.username = :trainerUsername) " +
+                "and (:trainingTypeId is null or t.trainingType.id = :trainingTypeId)";
         TypedQuery<Training> typedQuery = entityManager.createQuery(query, Training.class);
 
         typedQuery.setParameter("username", username);
         typedQuery.setParameter("toDate", toDate);
         typedQuery.setParameter("fromDate", fromDate);
-        typedQuery.setParameter("trainerName", trainerName);
-        typedQuery.setParameter("trainingType", trainingType);
+        typedQuery.setParameter("trainerUsername", trainerUsername);
+        typedQuery.setParameter("trainingTypeId", trainingTypeId);
 
         List<Training> trainings = typedQuery.getResultList();
 
@@ -77,19 +77,19 @@ public class TrainingDAO {
         return trainings;
     }
 
-    public List<Training> findAllByTrainerAndCategory(String username, LocalDate fromDate, LocalDate toDate, String traineeName) {
-        String query = "FROM Training t JOIN t.trainer trainer JOIN t.trainee trainee " +
-                "WHERE trainer.username = :username " +
-                "AND (:fromDate IS NULL OR t.trainingDate >= :fromDate) " +
-                "AND (:toDate IS NULL OR t.trainingDate <= :toDate) " +
-                "AND (:traineeName IS NULL OR trainee.username = :traineeName) ";
+    public List<Training> findAllByTrainerAndCategory(String username, LocalDate fromDate, LocalDate toDate, String traineeUsername) {
+        String query = "from Training t join t.trainer trainer join t.trainee trainee " +
+                "where trainer.username = :username " +
+                "and (cast(:fromDate as date) is null or t.trainingDate >= :fromDate) " +
+                "and (cast(:toDate as date) is null or t.trainingDate <= :toDate) " +
+                "and (:traineeUsername is null or trainee.username = :traineeUsername) ";
 
         TypedQuery<Training> typedQuery = entityManager.createQuery(query, Training.class);
 
         typedQuery.setParameter("username", username);
         typedQuery.setParameter("toDate", toDate);
         typedQuery.setParameter("fromDate", fromDate);
-        typedQuery.setParameter("traineeName", traineeName);
+        typedQuery.setParameter("traineeUsername", traineeUsername);
 
         List<Training> trainings = typedQuery.getResultList();
 

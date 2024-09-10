@@ -23,12 +23,6 @@ public class TrainerController {
     private final TrainerService trainerService;
     private final TrainingService trainingService;
 
-    @PostMapping
-    public ApiResponse<Void> create(@Valid @RequestBody TrainerRequest request) {
-        log.info("Creating trainer: {}", request);
-        return trainerService.create(request);
-    }
-
     @GetMapping("/{username}")
     public ApiResponse<TrainerResponse> findByUsername(@PathVariable String username) {
         log.info("Finding trainer with username {}", username);

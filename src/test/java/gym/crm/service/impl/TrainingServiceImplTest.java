@@ -8,9 +8,9 @@ import gym.crm.mapper.TrainingMapper;
 import gym.crm.model.Trainee;
 import gym.crm.model.Trainer;
 import gym.crm.model.Training;
-import gym.crm.repository.TraineeDAO;
-import gym.crm.repository.TrainerDAO;
-import gym.crm.repository.TrainingDAO;
+import gym.crm.repository.TraineeRepository;
+import gym.crm.repository.TrainerRepository;
+import gym.crm.repository.TrainingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -28,13 +28,13 @@ import static org.mockito.Mockito.*;
 class TrainingServiceImplTest {
 
     @Mock
-    private TraineeDAO traineeDAO;
+    private TraineeRepository traineeRepository;
 
     @Mock
-    private TrainerDAO trainerDAO;
+    private TrainerRepository trainerRepository;
 
     @Mock
-    private TrainingDAO trainingDAO;
+    private TrainingRepository trainingRepository;
 
     @Mock
     private TrainingMapper trainingMapper;
@@ -60,8 +60,8 @@ class TrainingServiceImplTest {
 
         Training training = new Training();
 
-        when(trainerDAO.findById(1L)).thenReturn(trainer);
-        when(traineeDAO.findById(1L)).thenReturn(trainee);
+        when(trainerRepository.findById(1L)).thenReturn(trainer);
+        when(traineeRepository.findById(1L)).thenReturn(trainee);
         when(trainingMapper.toEntity(trainingRequest)).thenReturn(training);
 
         ApiResponse<Void> response = trainingService.create(trainingRequest);
@@ -69,13 +69,13 @@ class TrainingServiceImplTest {
         assertTrue(response.success());
         assertEquals("Training created successfully!", response.message());
 
-        verify(trainerDAO, times(1)).findById(1L);
-        verify(traineeDAO, times(1)).findById(1L);
+        verify(trainerRepository, times(1)).findById(1L);
+        verify(traineeRepository, times(1)).findById(1L);
         verify(trainingMapper, times(1)).toEntity(trainingRequest);
-        verify(trainingDAO, times(1)).save(training);
-        verify(traineeDAO, times(1)).update(trainee);
-        verify(trainerDAO, times(1)).update(trainer);
-        verifyNoMoreInteractions(trainerDAO, traineeDAO, trainingMapper, trainingDAO);
+        verify(trainingRepository, times(1)).save(training);
+        verify(traineeRepository, times(1)).update(trainee);
+        verify(trainerRepository, times(1)).update(trainer);
+        verifyNoMoreInteractions(trainerRepository, traineeRepository, trainingMapper, trainingRepository);
     }
 
     @Test
@@ -85,27 +85,27 @@ class TrainingServiceImplTest {
 
         TrainingRequest trainingRequest = new TrainingRequest(1L, 2L, "", 1L,LocalDate.now(), Duration.ofDays(1L));
 
-        when(trainerDAO.findById(trainerId)).thenReturn(null);
+        when(trainerRepository.findById(trainerId)).thenReturn(null);
 
         CustomNotFoundException e = assertThrows(CustomNotFoundException.class,
                 () -> trainingService.create(trainingRequest));
 
         assertEquals(e.getMessage(), "Trainer not found with id: %d".formatted(trainerId));
 
-        verify(trainerDAO, times(1)).findById(trainerId);
-        verify(trainingDAO, never()).save(any(Training.class));
+        verify(trainerRepository, times(1)).findById(trainerId);
+        verify(trainingRepository, never()).save(any(Training.class));
     }
 
     @Test
     void findByIdFails() {
-        when(trainingDAO.findById(1L)).thenReturn(null);
+        when(trainingRepository.findById(1L)).thenReturn(null);
         CustomNotFoundException exception = assertThrows(CustomNotFoundException.class, () -> {
             trainingService.findById(1L);
         });
         assertEquals("Training not found with id: %d".formatted(1L), exception.getMessage());
 
-        verify(trainingDAO, times(1)).findById(1L);
-        verifyNoMoreInteractions(trainingDAO);
+        verify(trainingRepository, times(1)).findById(1L);
+        verifyNoMoreInteractions(trainingRepository);
     }
 
     @Test
@@ -116,7 +116,7 @@ class TrainingServiceImplTest {
                 1L, 1L, 1L, "", "GYM", LocalDate.now(), Duration.ZERO
         );
 
-        when(trainingDAO.findById(trainingId)).thenReturn(training);
+        when(trainingRepository.findById(trainingId)).thenReturn(training);
         when(trainingMapper.toResponse(training)).thenReturn(trainingResponse);
 
         ApiResponse<TrainingResponse> response = trainingService.findById(trainingId);
@@ -124,19 +124,19 @@ class TrainingServiceImplTest {
         assertEquals("Successfully found", response.message());
         assertEquals(trainingResponse, response.data());
 
-        verify(trainingDAO, times(1)).findById(trainingId);
+        verify(trainingRepository, times(1)).findById(trainingId);
         verify(trainingMapper, times(1)).toResponse(training);
-        verifyNoMoreInteractions(trainingDAO, trainingMapper);
+        verifyNoMoreInteractions(trainingRepository, trainingMapper);
     }
 
     @Test
     void findAllTrainingsFails() {
-        when(trainingDAO.isTrainingDBEmpty()).thenReturn(true);
+        when(trainingRepository.isTrainingDBEmpty()).thenReturn(true);
         CustomNotFoundException exception = assertThrows(CustomNotFoundException.class,
                 () -> trainingService.findAll());
         assertEquals("Training not found!", exception.getMessage());
-        verify(trainingDAO, times(1)).isTrainingDBEmpty();
-        verifyNoMoreInteractions(trainingDAO);
+        verify(trainingRepository, times(1)).isTrainingDBEmpty();
+        verifyNoMoreInteractions(trainingRepository);
     }
 
     @Test
@@ -147,8 +147,8 @@ class TrainingServiceImplTest {
                 new TrainingResponse(1L, 1L, 1L, "", "GYM", LocalDate.now(), Duration.ZERO)
         );
 
-        when(trainingDAO.isTrainingDBEmpty()).thenReturn(false);
-        when(trainingDAO.findAll()).thenReturn(trainings);
+        when(trainingRepository.isTrainingDBEmpty()).thenReturn(false);
+        when(trainingRepository.findAll()).thenReturn(trainings);
         when(trainingMapper.toResponses(trainings)).thenReturn(trainingResponses);
 
         ApiResponse<List<TrainingResponse>> response = trainingService.findAll();
@@ -157,10 +157,10 @@ class TrainingServiceImplTest {
         assertEquals("Success!", response.message());
         assertEquals(trainingResponses, response.data());
 
-        verify(trainingDAO, times(1)).isTrainingDBEmpty();
-        verify(trainingDAO, times(1)).findAll();
+        verify(trainingRepository, times(1)).isTrainingDBEmpty();
+        verify(trainingRepository, times(1)).findAll();
         verify(trainingMapper, times(1)).toResponses(trainings);
-        verifyNoMoreInteractions(trainingDAO, trainingMapper);
+        verifyNoMoreInteractions(trainingRepository, trainingMapper);
     }
 
     @Test
@@ -177,7 +177,7 @@ class TrainingServiceImplTest {
 
         List<TrainingResponse> mockResponses = List.of(response1, response2);
 
-        when(trainingDAO.findAllByCriteria(username, fromDate, toDate, trainerName, trainingTypeId)).thenReturn(mockTrainings);
+        when(trainingRepository.findAllByCriteria(username, fromDate, toDate, trainerName, trainingTypeId)).thenReturn(mockTrainings);
         when(trainingMapper.toResponses(mockTrainings)).thenReturn(mockResponses);
 
         ApiResponse<List<TrainingResponse>> response = trainingService.findTraineeTrainings(username, fromDate, toDate, trainerName, trainingTypeId);
@@ -186,7 +186,7 @@ class TrainingServiceImplTest {
         assertTrue(response.success());
         assertEquals("Successfully found!", response.message());
 
-        verify(trainingDAO, times(1)).findAllByCriteria(username, fromDate, toDate, trainerName, trainingTypeId);
+        verify(trainingRepository, times(1)).findAllByCriteria(username, fromDate, toDate, trainerName, trainingTypeId);
     }
 
     @Test
@@ -202,7 +202,7 @@ class TrainingServiceImplTest {
         List<Training> mockTrainings = List.of(new Training(), new Training());
         List<TrainingResponse> mockResponses = List.of(response1, response2);
 
-        when(trainingDAO.findAllByTrainerAndCategory(username, fromDate, toDate, traineeName)).thenReturn(mockTrainings);
+        when(trainingRepository.findAllByTrainerAndCategory(username, fromDate, toDate, traineeName)).thenReturn(mockTrainings);
         when(trainingMapper.toResponses(mockTrainings)).thenReturn(mockResponses);
 
         ApiResponse<List<TrainingResponse>> response = trainingService.getTrainingsByTrainer(username, fromDate, toDate, traineeName);
@@ -211,7 +211,7 @@ class TrainingServiceImplTest {
         assertTrue(response.success());
         assertEquals("Successfully found!", response.message());
 
-        verify(trainingDAO, times(1)).findAllByTrainerAndCategory(username, fromDate, toDate, traineeName);
+        verify(trainingRepository, times(1)).findAllByTrainerAndCategory(username, fromDate, toDate, traineeName);
     }
 
 }

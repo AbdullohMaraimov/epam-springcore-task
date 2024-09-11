@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 @Slf4j
 @Repository
 @RequiredArgsConstructor
-public class TrainingTypeDAO {
+public class TrainingTypeRepository {
 
     private final EntityManager entityManager;
 

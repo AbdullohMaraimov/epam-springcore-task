@@ -9,10 +9,10 @@ import gym.crm.model.Trainee;
 import gym.crm.model.Trainer;
 import gym.crm.model.Training;
 import gym.crm.model.TrainingType;
-import gym.crm.repository.TraineeDAO;
-import gym.crm.repository.TrainerDAO;
-import gym.crm.repository.TrainingDAO;
-import gym.crm.repository.TrainingTypeDAO;
+import gym.crm.repository.TraineeRepository;
+import gym.crm.repository.TrainerRepository;
+import gym.crm.repository.TrainingRepository;
+import gym.crm.repository.TrainingTypeRepository;
 import gym.crm.service.TrainingService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -27,11 +27,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TrainingServiceImpl implements TrainingService {
 
-    private final TrainingDAO trainingDAO;
-    private final TrainerDAO trainerDAO;
-    private final TraineeDAO traineeDAO;
+    private final TrainingRepository trainingRepository;
+    private final TrainerRepository trainerRepository;
+    private final TraineeRepository traineeRepository;
     private final TrainingMapper trainingMapper;
-    private final TrainingTypeDAO trainingTypeDAO;
+    private final TrainingTypeRepository trainingTypeRepository;
 
     @Override
     @Transactional
@@ -41,24 +41,24 @@ public class TrainingServiceImpl implements TrainingService {
 
         log.debug("Creating training with request: {}", trainingRequest);
 
-        Trainer trainer = trainerDAO.findById(trainerId);
+        Trainer trainer = trainerRepository.findById(trainerId);
         if (trainer == null) throw new CustomNotFoundException("Trainer not found with id: %d".formatted(trainerId));
-        Trainee trainee = traineeDAO.findById(traineeId);
+        Trainee trainee = traineeRepository.findById(traineeId);
         if (trainee == null) throw new CustomNotFoundException("Trainee not found with id: %d".formatted(trainerId));
 
         Training training = trainingMapper.toEntity(trainingRequest);
 
-        TrainingType trainingType = trainingTypeDAO.findById(trainingRequest.trainingTypeId());
+        TrainingType trainingType = trainingTypeRepository.findById(trainingRequest.trainingTypeId());
         training.setTrainee(trainee);
         training.setTrainer(trainer);
         training.setTrainingType(trainingType);
-        trainingDAO.save(training);
+        trainingRepository.save(training);
 
         trainee.addTrainer(trainer);
         trainer.addTrainee(trainee);
 
-        traineeDAO.update(trainee);
-        trainerDAO.update(trainer);
+        traineeRepository.update(trainee);
+        trainerRepository.update(trainer);
 
         log.info("Training created successfully with ID: {}", training.getId());
         return new ApiResponse<>(200,true, null, "Training created successfully!");
@@ -68,7 +68,7 @@ public class TrainingServiceImpl implements TrainingService {
     @Transactional
     public ApiResponse<TrainingResponse> findById(Long id) {
         log.debug("Finding training with ID: {}", id);
-        Training training = trainingDAO.findById(id);
+        Training training = trainingRepository.findById(id);
         if (training == null) {
             throw new CustomNotFoundException("Training not found with id: %d".formatted(id));
         }
@@ -81,11 +81,11 @@ public class TrainingServiceImpl implements TrainingService {
     @Transactional
     public ApiResponse<List<TrainingResponse>> findAll() {
         log.debug("Finding all trainings");
-        if (trainingDAO.isTrainingDBEmpty()) {
+        if (trainingRepository.isTrainingDBEmpty()) {
             log.error("No trainings found!");
             throw new CustomNotFoundException("Training not found!");
         }
-        List<Training> trainings = trainingDAO.findAll();
+        List<Training> trainings = trainingRepository.findAll();
         List<TrainingResponse> trainingResponses = trainingMapper.toResponses(trainings);
         log.info("Found {} trainings", trainingResponses.size());
         return new ApiResponse<>(200,true, trainingResponses, "Success!");
@@ -94,7 +94,7 @@ public class TrainingServiceImpl implements TrainingService {
     @Override
     public ApiResponse<List<TrainingResponse>> findTraineeTrainings(String username, LocalDate fromDate, LocalDate toDate, String trainerName, Long trainingTypeId) {
         log.debug("Finding trainee trainings for username: {}", username);
-        List<Training> trainings = trainingDAO.findAllByCriteria(username, fromDate, toDate, trainerName, trainingTypeId);
+        List<Training> trainings = trainingRepository.findAllByCriteria(username, fromDate, toDate, trainerName, trainingTypeId);
         List<TrainingResponse> responses = trainingMapper.toResponses(trainings);
         return new ApiResponse<>(200, responses, "Successfully found!", true);
     }
@@ -102,7 +102,7 @@ public class TrainingServiceImpl implements TrainingService {
     @Override
     public ApiResponse<List<TrainingResponse>> getTrainingsByTrainer(String username, LocalDate fromDate, LocalDate toDate, String traineeName) {
         log.debug("Finding trainings by trainer: {}", username);
-        List<Training> trainings = trainingDAO.findAllByTrainerAndCategory(username, fromDate, toDate, traineeName);
+        List<Training> trainings = trainingRepository.findAllByTrainerAndCategory(username, fromDate, toDate, traineeName);
         List<TrainingResponse> responses = trainingMapper.toResponses(trainings);
         return new ApiResponse<>(200, responses, "Successfully found!", true);
     }

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 @Slf4j
 @Repository
 @RequiredArgsConstructor
-public class UserDAO {
+public class UserRepository {
 
     @PersistenceContext
     private final EntityManager entityManager;

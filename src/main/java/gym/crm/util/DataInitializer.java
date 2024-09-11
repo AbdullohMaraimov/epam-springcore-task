@@ -8,9 +8,9 @@ import gym.crm.dto.request.TrainingRequest;
 import gym.crm.model.Trainee;
 import gym.crm.model.Trainer;
 import gym.crm.model.TrainingType;
-import gym.crm.repository.TraineeDAO;
-import gym.crm.repository.TrainerDAO;
-import gym.crm.repository.TrainingTypeDAO;
+import gym.crm.repository.TraineeRepository;
+import gym.crm.repository.TrainerRepository;
+import gym.crm.repository.TrainingTypeRepository;
 import gym.crm.service.TraineeService;
 import gym.crm.service.TrainerService;
 import gym.crm.service.TrainingService;
@@ -35,7 +35,7 @@ import java.util.List;
 public class DataInitializer {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private final TrainingTypeDAO trainingTypeDAO;
+    private final TrainingTypeRepository trainingTypeRepository;
 
     @Value("${storage.trainee.file}")
     private String traineeDataFile;
@@ -46,8 +46,8 @@ public class DataInitializer {
     @Value("${storage.training.file}")
     private String trainingDataFile;
 
-    private final TraineeDAO traineeDAO;
-    private final TrainerDAO trainerDAO;
+    private final TraineeRepository traineeRepository;
+    private final TrainerRepository trainerRepository;
     private final TraineeService traineeService;
     private final TrainerService trainerService;
     private final TrainingService trainingService;
@@ -63,8 +63,8 @@ public class DataInitializer {
     }
 
     public void initTrainingType() {
-        if (trainingTypeDAO.findByTrainingName("GYM") == null) {
-            trainingTypeDAO.save("GYM");
+        if (trainingTypeRepository.findByTrainingName("GYM") == null) {
+            trainingTypeRepository.save("GYM");
         }
     }
 
@@ -112,7 +112,7 @@ public class DataInitializer {
                     String lastName = parts[1];
                     String specializationName = parts[2];
 
-                    TrainingType trainingType = trainingTypeDAO.findByTrainingName(specializationName);
+                    TrainingType trainingType = trainingTypeRepository.findByTrainingName(specializationName);
 
                     TrainerRequest trainer = new TrainerRequest(
                             firstName,
@@ -146,11 +146,11 @@ public class DataInitializer {
                     LocalDate trainingDate = LocalDate.parse(parts[4], FORMATTER);
                     Duration duration = Duration.parse(parts[5]);
 
-                    TrainingType trainingType = trainingTypeDAO.findByTrainingName(trainingTypeName);
+                    TrainingType trainingType = trainingTypeRepository.findByTrainingName(trainingTypeName);
 
                     if (trainingType == null) {
-                        trainingTypeDAO.save(trainingTypeName);
-                        trainingType = trainingTypeDAO.findByTrainingName(trainingTypeName);
+                        trainingTypeRepository.save(trainingTypeName);
+                        trainingType = trainingTypeRepository.findByTrainingName(trainingTypeName);
                     }
 
                     TrainingRequest training = new TrainingRequest(
@@ -164,14 +164,14 @@ public class DataInitializer {
 
                     trainingService.create(training);
 
-                    Trainee trainee = traineeDAO.findByUsername(traineeUsername);
-                    Trainer trainer = trainerDAO.findByUsername(trainerUsername);
+                    Trainee trainee = traineeRepository.findByUsername(traineeUsername);
+                    Trainer trainer = trainerRepository.findByUsername(trainerUsername);
 
                     trainee.addTrainer(trainer);
                     trainer.addTrainee(trainee);
 
-                    traineeDAO.update(trainee);
-                    trainerDAO.update(trainer);
+                    traineeRepository.update(trainee);
+                    trainerRepository.update(trainer);
 
                     log.info("training created: {}", training);
                 } else {

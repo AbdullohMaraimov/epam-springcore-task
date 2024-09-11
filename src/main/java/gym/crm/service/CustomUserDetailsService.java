@@ -1,6 +1,6 @@
 package gym.crm.service;
 
-import gym.crm.repository.UserDAO;
+import gym.crm.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -11,11 +11,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserDAO userDAO;
+    private final UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userDAO.findByUsername(username);
+        return userRepository.findByUsername(username);
     }
 
 }

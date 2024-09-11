@@ -7,8 +7,8 @@ import gym.crm.exception.CustomNotFoundException;
 import gym.crm.mapper.TrainerMapper;
 import gym.crm.model.Trainer;
 import gym.crm.model.TrainingType;
-import gym.crm.repository.TrainerDAO;
-import gym.crm.repository.TrainingTypeDAO;
+import gym.crm.repository.TrainerRepository;
+import gym.crm.repository.TrainingTypeRepository;
 import gym.crm.service.TrainerService;
 import gym.crm.util.PasswordGenerator;
 import jakarta.transaction.Transactional;
@@ -26,9 +26,9 @@ public class TrainerServiceImpl implements TrainerService {
 
     private final TrainerMapper trainerMapper;
 
-    private final TrainerDAO trainerDAO;
+    private final TrainerRepository trainerRepository;
 
-    private final TrainingTypeDAO trainingTypeDAO;
+    private final TrainingTypeRepository trainingTypeRepository;
 
     @Override
     @Transactional
@@ -36,16 +36,16 @@ public class TrainerServiceImpl implements TrainerService {
         log.debug("Creating new trainer with request: {}", trainerRequest);
         Trainer trainer = trainerMapper.toTrainer(trainerRequest);
         trainer.setPassword(PasswordGenerator.generatePassword());
-        TrainingType trainingType = trainingTypeDAO.findById(trainerRequest.specializationId());
+        TrainingType trainingType = trainingTypeRepository.findById(trainerRequest.specializationId());
         if (trainingType == null) {
             throw new CustomNotFoundException("TrainingType with id : %d not found".formatted(trainerRequest.specializationId()));
         }
         trainer.setSpecialization(trainingType);
-        if (trainerDAO.isUsernameExists(trainer.getUsername())) {
-            trainer.setUsername(trainer.getUsername() + TrainerDAO.index++);
+        if (trainerRepository.isUsernameExists(trainer.getUsername())) {
+            trainer.setUsername(trainer.getUsername() + TrainerRepository.index++);
             log.info("Username already exists, changed it to {}", trainer.getUsername());
         }
-        trainerDAO.save(trainer);
+        trainerRepository.save(trainer);
         log.info("Trainer saved successfully: {}", trainer);
         return new ApiResponse<>(200, "Saved successfully!", true);
     }
@@ -54,18 +54,18 @@ public class TrainerServiceImpl implements TrainerService {
     @Transactional
     public ApiResponse<Void> update(String username, TrainerRequest trainerRequest) {
         log.debug("Updating trainer with username: {}", username);
-        Trainer trainer = trainerDAO.findByUsername(username);
+        Trainer trainer = trainerRepository.findByUsername(username);
         if (trainer == null) {
             log.error("Trainer with username %s not found".formatted(username));
             throw new CustomNotFoundException("Trainer not found!");
         }
         Trainer updated = trainerMapper.toUpdatedTrainer(trainer, trainerRequest);
-        TrainingType trainingType = trainingTypeDAO.findById(trainerRequest.specializationId());
+        TrainingType trainingType = trainingTypeRepository.findById(trainerRequest.specializationId());
         if (trainingType == null) {
             throw new CustomNotFoundException("TrainingType with id : %d not found".formatted(trainerRequest.specializationId()));
         }
         trainer.setSpecialization(trainingType);
-        trainerDAO.update(updated);
+        trainerRepository.update(updated);
         log.info("Trainer updated successfully: {}", updated);
         return new ApiResponse<>(200,true, null, "Successfully updated!");
     }
@@ -74,7 +74,7 @@ public class TrainerServiceImpl implements TrainerService {
     @Transactional
     public ApiResponse<Void> updatePassword(String username, String oldPassword, String newPassword) {
         log.debug("Updating password for trainer {}", username);
-        Trainer trainer = trainerDAO.findByUsername(username);
+        Trainer trainer = trainerRepository.findByUsername(username);
         if (trainer == null){
             throw new CustomNotFoundException("Trainer not found!");
         }
@@ -82,7 +82,7 @@ public class TrainerServiceImpl implements TrainerService {
             throw new IllegalArgumentException("Old password is incorrect");
         }
         trainer.setPassword(newPassword);
-        trainerDAO.save(trainer);
+        trainerRepository.save(trainer);
         log.info("Password updated successfully for trainer {}", username);
         return new ApiResponse<>(200, "Password update successful", true);
     }
@@ -91,7 +91,7 @@ public class TrainerServiceImpl implements TrainerService {
     @Transactional
     public ApiResponse<Void> deActivateUser(String username) {
         log.debug("Deactivating trainer with username {}", username);
-        Trainer trainer = trainerDAO.findByUsername(username);
+        Trainer trainer = trainerRepository.findByUsername(username);
         if (trainer == null) {
             log.error("Trainer with username {} not found", username);
             throw new CustomNotFoundException("Trainer not found!");
@@ -101,7 +101,7 @@ public class TrainerServiceImpl implements TrainerService {
             throw new IllegalArgumentException("Trainer is already inactive");
         }
         trainer.setIsActive(false);
-        trainerDAO.save(trainer);
+        trainerRepository.save(trainer);
         log.info("Trainer {} deactivated successfully", username);
         return new ApiResponse<>(200, "User deActivated successfully", true);
     }
@@ -110,7 +110,7 @@ public class TrainerServiceImpl implements TrainerService {
     @Transactional
     public ApiResponse<Void> activateUser(String username) {
         log.debug("Activating trainer with username {}", username);
-        Trainer trainer = trainerDAO.findByUsername(username);
+        Trainer trainer = trainerRepository.findByUsername(username);
         if (trainer == null) {
             log.error("Trainer with username {} not found", username);
             throw new CustomNotFoundException("Trainer not found!");
@@ -120,7 +120,7 @@ public class TrainerServiceImpl implements TrainerService {
             throw new IllegalArgumentException("Trainer is already active");
         }
         trainer.setIsActive(true);
-        trainerDAO.save(trainer);
+        trainerRepository.save(trainer);
         log.info("Trainer {} activated successfully", username);
         return new ApiResponse<>(200, "User Activated successfully", true);
     }
@@ -128,7 +128,7 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     public ApiResponse<TrainerResponse> findByUsername(String username) {
         log.debug("Finding trainer with username: {}", username);
-        Trainer trainer = trainerDAO.findByUsername(username);
+        Trainer trainer = trainerRepository.findByUsername(username);
         if (trainer == null) {
             log.error("Trainer with username %s not found".formatted(username));
             throw new CustomNotFoundException("Trainer not found!");
@@ -141,7 +141,7 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     public ApiResponse<List<TrainerResponse>> findAll() {
         log.debug("Finding all trainers");
-        List<Trainer> trainers = trainerDAO.findAll();
+        List<Trainer> trainers = trainerRepository.findAll();
         if (trainers.isEmpty()) {
             log.error("No trainers found!");
             throw new CustomNotFoundException("Trainers not found!");

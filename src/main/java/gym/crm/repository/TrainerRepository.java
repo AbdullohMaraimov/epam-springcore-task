@@ -14,7 +14,7 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
-public class TrainerDAO {
+public class TrainerRepository {
 
     public static int index = 1;
 

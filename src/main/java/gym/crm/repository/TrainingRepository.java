@@ -2,7 +2,6 @@ package gym.crm.repository;
 
 import gym.crm.exception.CustomNotFoundException;
 import gym.crm.model.Training;
-import gym.crm.model.TrainingType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
@@ -14,7 +13,7 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
-public class TrainingDAO {
+public class TrainingRepository {
 
     private final EntityManager entityManager;
 

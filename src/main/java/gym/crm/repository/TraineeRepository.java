@@ -15,7 +15,7 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
-public class TraineeDAO {
+public class TraineeRepository {
 
     @PersistenceContext
     private final EntityManager entityManager;

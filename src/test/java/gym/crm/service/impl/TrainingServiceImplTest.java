@@ -5,11 +5,12 @@ import gym.crm.dto.reponse.TrainingResponse;
 import gym.crm.dto.request.TrainingRequest;
 import gym.crm.exception.CustomNotFoundException;
 import gym.crm.mapper.TrainingMapper;
+import gym.crm.model.Trainee;
+import gym.crm.model.Trainer;
 import gym.crm.model.Training;
-import gym.crm.model.TrainingType;
-import gym.crm.repository.TraineeDAO;
-import gym.crm.repository.TrainerDAO;
-import gym.crm.repository.TrainingDAO;
+import gym.crm.repository.TraineeRepository;
+import gym.crm.repository.TrainerRepository;
+import gym.crm.repository.TrainingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -18,22 +19,22 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class TrainingServiceImplTest {
 
     @Mock
-    private TraineeDAO traineeDAO;
+    private TraineeRepository traineeRepository;
 
     @Mock
-    private TrainerDAO trainerDAO;
+    private TrainerRepository trainerRepository;
 
     @Mock
-    private TrainingDAO trainingDAO;
+    private TrainingRepository trainingRepository;
 
     @Mock
     private TrainingMapper trainingMapper;
@@ -48,65 +49,74 @@ class TrainingServiceImplTest {
 
     @Test
     void createTrainingSuccessfully() {
-        TrainingRequest trainingRequest = new TrainingRequest("trainee1", "trainer1", "training1", TrainingType.STANDARD, LocalDate.now(), Duration.ZERO);
+        TrainingRequest trainingRequest = new TrainingRequest(1L, 1L, "", 1L,LocalDate.now(), Duration.ofDays(1L));
+        Trainer trainer = new Trainer();
+        trainer.setTrainees(new ArrayList<>());
+        trainer.setId(1L);
+
+        Trainee trainee = new Trainee();
+        trainee.setTrainers(new ArrayList<>());
+        trainee.setId(1L);
+
         Training training = new Training();
-        when(trainerDAO.isUsernameExists("trainer1")).thenReturn(true);
-        when(traineeDAO.isUsernameExists("trainee1")).thenReturn(true);
+
+        when(trainerRepository.findById(1L)).thenReturn(trainer);
+        when(traineeRepository.findById(1L)).thenReturn(trainee);
         when(trainingMapper.toEntity(trainingRequest)).thenReturn(training);
 
         ApiResponse<Void> response = trainingService.create(trainingRequest);
 
-        assertEquals(true, response.success());
+        assertTrue(response.success());
         assertEquals("Training created successfully!", response.message());
 
-        verify(trainerDAO, times(1)).isUsernameExists("trainer1");
-        verify(traineeDAO, times(1)).isUsernameExists("trainee1");
+        verify(trainerRepository, times(1)).findById(1L);
+        verify(traineeRepository, times(1)).findById(1L);
         verify(trainingMapper, times(1)).toEntity(trainingRequest);
-        verify(trainingDAO, times(1)).save(training);
-        verifyNoMoreInteractions(trainerDAO, traineeDAO, trainingMapper, trainingDAO);
+        verify(trainingRepository, times(1)).save(training);
+        verify(traineeRepository, times(1)).update(trainee);
+        verify(trainerRepository, times(1)).update(trainer);
+        verifyNoMoreInteractions(trainerRepository, traineeRepository, trainingMapper, trainingRepository);
     }
 
     @Test
-    void createTrainingFailsTrainerDoestExist() {
-        TrainingRequest trainingRequest = new TrainingRequest("trainee1", "trainer1", "training1", TrainingType.STANDARD, LocalDate.now(), Duration.ZERO);
+    public void testCreateTraining_TrainerNotFound() {
+        Long traineeId = 1L;
+        Long trainerId = 2L;
 
-        when(trainerDAO.isUsernameExists("trainer1")).thenReturn(false);
-        when(traineeDAO.isUsernameExists("trainee1")).thenReturn(true);
+        TrainingRequest trainingRequest = new TrainingRequest(1L, 2L, "", 1L,LocalDate.now(), Duration.ofDays(1L));
 
-        CustomNotFoundException exception = assertThrows(CustomNotFoundException.class, () -> {
-            trainingService.create(trainingRequest);
-        });
+        when(trainerRepository.findById(trainerId)).thenReturn(null);
 
-        assertEquals("Trainer or Trainee does not exist!", exception.getMessage());
+        CustomNotFoundException e = assertThrows(CustomNotFoundException.class,
+                () -> trainingService.create(trainingRequest));
 
-        verify(trainerDAO, times(1)).isUsernameExists("trainer1");
-        verify(traineeDAO, times(0)).isUsernameExists("trainee1");
-        verify(trainingDAO, never()).save(any());
-        verifyNoMoreInteractions(trainerDAO, traineeDAO, trainingDAO);
+        assertEquals(e.getMessage(), "Trainer not found with id: %d".formatted(trainerId));
+
+        verify(trainerRepository, times(1)).findById(trainerId);
+        verify(trainingRepository, never()).save(any(Training.class));
     }
 
     @Test
     void findByIdFails() {
-        when(trainingDAO.isTrainingExist("id")).thenReturn(false);
+        when(trainingRepository.findById(1L)).thenReturn(null);
         CustomNotFoundException exception = assertThrows(CustomNotFoundException.class, () -> {
-            trainingService.findById("id");
+            trainingService.findById(1L);
         });
-        assertEquals("Training not found!", exception.getMessage());
+        assertEquals("Training not found with id: %d".formatted(1L), exception.getMessage());
 
-        verify(trainingDAO, times(1)).isTrainingExist("id");
-        verifyNoMoreInteractions(trainingDAO);
+        verify(trainingRepository, times(1)).findById(1L);
+        verifyNoMoreInteractions(trainingRepository);
     }
 
     @Test
-    void findByIdSuccess() {
-        String trainingId = "id";
+    void findById_Success() {
+        Long trainingId = 1L;
         Training training = new Training();
         TrainingResponse trainingResponse = new TrainingResponse(
-                "", "", "", "", TrainingType.STANDARD, LocalDate.now(), Duration.ZERO
+                1L, 1L, 1L, "", "GYM", LocalDate.now(), Duration.ZERO
         );
 
-        when(trainingDAO.isTrainingExist(trainingId)).thenReturn(true);
-        when(trainingDAO.findById(trainingId)).thenReturn(training);
+        when(trainingRepository.findById(trainingId)).thenReturn(training);
         when(trainingMapper.toResponse(training)).thenReturn(trainingResponse);
 
         ApiResponse<TrainingResponse> response = trainingService.findById(trainingId);
@@ -114,32 +124,31 @@ class TrainingServiceImplTest {
         assertEquals("Successfully found", response.message());
         assertEquals(trainingResponse, response.data());
 
-        verify(trainingDAO, times(1)).isTrainingExist(trainingId);
-        verify(trainingDAO, times(1)).findById(trainingId);
+        verify(trainingRepository, times(1)).findById(trainingId);
         verify(trainingMapper, times(1)).toResponse(training);
-        verifyNoMoreInteractions(trainingDAO, trainingMapper);
+        verifyNoMoreInteractions(trainingRepository, trainingMapper);
     }
 
     @Test
     void findAllTrainingsFails() {
-        when(trainingDAO.isTrainingDBEmpty()).thenReturn(true);
+        when(trainingRepository.isTrainingDBEmpty()).thenReturn(true);
         CustomNotFoundException exception = assertThrows(CustomNotFoundException.class,
                 () -> trainingService.findAll());
         assertEquals("Training not found!", exception.getMessage());
-        verify(trainingDAO, times(1)).isTrainingDBEmpty();
-        verifyNoMoreInteractions(trainingDAO);
+        verify(trainingRepository, times(1)).isTrainingDBEmpty();
+        verifyNoMoreInteractions(trainingRepository);
     }
 
     @Test
     void findAll() {
         List<Training> trainings = List.of(new Training(), new Training());
         List<TrainingResponse> trainingResponses = List.of(
-                new TrainingResponse("", "", "", "", TrainingType.STANDARD, LocalDate.now(), Duration.ZERO),
-                new TrainingResponse("", "", "", "", TrainingType.STANDARD, LocalDate.now(), Duration.ZERO)
+                new TrainingResponse(1L, 1L, 1L, "", "GYM", LocalDate.now(), Duration.ZERO),
+                new TrainingResponse(1L, 1L, 1L, "", "GYM", LocalDate.now(), Duration.ZERO)
         );
 
-        when(trainingDAO.isTrainingDBEmpty()).thenReturn(false);
-        when(trainingDAO.findAll()).thenReturn(trainings);
+        when(trainingRepository.isTrainingDBEmpty()).thenReturn(false);
+        when(trainingRepository.findAll()).thenReturn(trainings);
         when(trainingMapper.toResponses(trainings)).thenReturn(trainingResponses);
 
         ApiResponse<List<TrainingResponse>> response = trainingService.findAll();
@@ -148,9 +157,61 @@ class TrainingServiceImplTest {
         assertEquals("Success!", response.message());
         assertEquals(trainingResponses, response.data());
 
-        verify(trainingDAO, times(1)).isTrainingDBEmpty();
-        verify(trainingDAO, times(1)).findAll();
+        verify(trainingRepository, times(1)).isTrainingDBEmpty();
+        verify(trainingRepository, times(1)).findAll();
         verify(trainingMapper, times(1)).toResponses(trainings);
-        verifyNoMoreInteractions(trainingDAO, trainingMapper);
+        verifyNoMoreInteractions(trainingRepository, trainingMapper);
     }
+
+    @Test
+    public void testFindTraineeTrainings_Success() {
+        String username = "trainee1";
+        LocalDate fromDate = LocalDate.of(2023, 1, 1);
+        LocalDate toDate = LocalDate.of(2023, 12, 31);
+        String trainerName = "trainer1";
+        Long trainingTypeId = 1L;
+
+        List<Training> mockTrainings = List.of(new Training(), new Training());
+        TrainingResponse response1 = new TrainingResponse(1L, 1L, 1L, "", "GYM", LocalDate.now(), Duration.ZERO);
+        TrainingResponse response2 = new TrainingResponse(1L, 1L, 1L, "", "GYM", LocalDate.now(), Duration.ZERO);
+
+        List<TrainingResponse> mockResponses = List.of(response1, response2);
+
+        when(trainingRepository.findAllByCriteria(username, fromDate, toDate, trainerName, trainingTypeId)).thenReturn(mockTrainings);
+        when(trainingMapper.toResponses(mockTrainings)).thenReturn(mockResponses);
+
+        ApiResponse<List<TrainingResponse>> response = trainingService.findTraineeTrainings(username, fromDate, toDate, trainerName, trainingTypeId);
+
+        assertEquals(200, response.statusCode());
+        assertTrue(response.success());
+        assertEquals("Successfully found!", response.message());
+
+        verify(trainingRepository, times(1)).findAllByCriteria(username, fromDate, toDate, trainerName, trainingTypeId);
+    }
+
+    @Test
+    public void testGetTrainingsByTrainer_Success() {
+        String username = "trainer1";
+        LocalDate fromDate = LocalDate.of(2023, 1, 1);
+        LocalDate toDate = LocalDate.of(2023, 12, 31);
+        String traineeName = "trainee1";
+
+        TrainingResponse response1 = new TrainingResponse(1L, 1L, 1L, "", "GYM", LocalDate.now(), Duration.ZERO);
+        TrainingResponse response2 = new TrainingResponse(1L, 1L, 1L, "", "GYM", LocalDate.now(), Duration.ZERO);
+
+        List<Training> mockTrainings = List.of(new Training(), new Training());
+        List<TrainingResponse> mockResponses = List.of(response1, response2);
+
+        when(trainingRepository.findAllByTrainerAndCategory(username, fromDate, toDate, traineeName)).thenReturn(mockTrainings);
+        when(trainingMapper.toResponses(mockTrainings)).thenReturn(mockResponses);
+
+        ApiResponse<List<TrainingResponse>> response = trainingService.getTrainingsByTrainer(username, fromDate, toDate, traineeName);
+
+        assertEquals(true, response.success());
+        assertTrue(response.success());
+        assertEquals("Successfully found!", response.message());
+
+        verify(trainingRepository, times(1)).findAllByTrainerAndCategory(username, fromDate, toDate, traineeName);
+    }
+
 }

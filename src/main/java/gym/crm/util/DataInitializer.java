@@ -5,11 +5,17 @@ import com.opencsv.exceptions.CsvException;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.dto.request.TrainerRequest;
 import gym.crm.dto.request.TrainingRequest;
+import gym.crm.model.Trainee;
+import gym.crm.model.Trainer;
 import gym.crm.model.TrainingType;
+import gym.crm.repository.TraineeRepository;
+import gym.crm.repository.TrainerRepository;
+import gym.crm.repository.TrainingTypeRepository;
 import gym.crm.service.TraineeService;
 import gym.crm.service.TrainerService;
 import gym.crm.service.TrainingService;
 import jakarta.annotation.PostConstruct;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +35,7 @@ import java.util.List;
 public class DataInitializer {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final TrainingTypeRepository trainingTypeRepository;
 
     @Value("${storage.trainee.file}")
     private String traineeDataFile;
@@ -39,18 +46,27 @@ public class DataInitializer {
     @Value("${storage.training.file}")
     private String trainingDataFile;
 
+    private final TraineeRepository traineeRepository;
+    private final TrainerRepository trainerRepository;
     private final TraineeService traineeService;
     private final TrainerService trainerService;
     private final TrainingService trainingService;
 
-        @PostConstruct
-        public void initAll() {
-            log.error("Initializing data...");
-            initTrainee();
-            initTrainer();
-            initTraining();
-            log.info("Data initialization complete.");
+    @PostConstruct
+    public void initAll() {
+        log.info("Initializing data...");
+        initTrainingType();
+        initTrainee();
+        initTrainer();
+        initTraining();
+        log.info("Data initialization complete.");
+    }
+
+    public void initTrainingType() {
+        if (trainingTypeRepository.findByTrainingName("GYM") == null) {
+            trainingTypeRepository.save("GYM");
         }
+    }
 
     public void initTrainee() {
         log.info("Initializing trainee data from file...");
@@ -94,12 +110,14 @@ public class DataInitializer {
                 if (parts.length >= 3) {
                     String firstName = parts[0];
                     String lastName = parts[1];
-                    String specialization = parts[2];
+                    String specializationName = parts[2];
+
+                    TrainingType trainingType = trainingTypeRepository.findByTrainingName(specializationName);
 
                     TrainerRequest trainer = new TrainerRequest(
                             firstName,
                             lastName,
-                            specialization
+                            trainingType.getId()
                     );
                     trainerService.create(trainer);
                     log.info("Trainer created: {}", trainer);
@@ -112,31 +130,49 @@ public class DataInitializer {
         }
     }
 
+    @Transactional
     public void initTraining() {
         log.info("Initializing training data from file");
         Resource resource = new ClassPathResource("training-data.csv");
-        Resource resource2 = new ClassPathResource("this-mock-data"); // todo to be deleted
 
         try (CSVReader reader = new CSVReader(new InputStreamReader(resource.getInputStream()))) {
             List<String[]> rows = reader.readAll();
             for (String[] parts : rows) {
                 if (parts.length >= 6) {
-                    String traineeId = parts[0];
-                    String trainerId = parts[1];
+                    String traineeUsername = parts[0];
+                    String trainerUsername = parts[1];
                     String trainingName = parts[2];
-                    TrainingType trainingType = TrainingType.valueOf(parts[3]);
+                    String trainingTypeName = parts[3];
                     LocalDate trainingDate = LocalDate.parse(parts[4], FORMATTER);
                     Duration duration = Duration.parse(parts[5]);
 
+                    TrainingType trainingType = trainingTypeRepository.findByTrainingName(trainingTypeName);
+
+                    if (trainingType == null) {
+                        trainingTypeRepository.save(trainingTypeName);
+                        trainingType = trainingTypeRepository.findByTrainingName(trainingTypeName);
+                    }
+
                     TrainingRequest training = new TrainingRequest(
-                            traineeId,
-                            trainerId,
+                            traineeService.findByUsername(traineeUsername).data().userId(),
+                            trainerService.findByUsername(trainerUsername).data().userId(),
                             trainingName,
-                            trainingType,
+                            trainingType.getId(),
                             trainingDate,
                             duration
                     );
+
                     trainingService.create(training);
+
+                    Trainee trainee = traineeRepository.findByUsername(traineeUsername);
+                    Trainer trainer = trainerRepository.findByUsername(trainerUsername);
+
+                    trainee.addTrainer(trainer);
+                    trainer.addTrainee(trainee);
+
+                    traineeRepository.update(trainee);
+                    trainerRepository.update(trainer);
+
                     log.info("training created: {}", training);
                 } else {
                     log.warn("Skipping invalid training row: {}", String.join(",", parts));

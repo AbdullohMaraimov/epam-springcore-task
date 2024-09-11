@@ -1,14 +1,29 @@
 package gym.crm.model;
 
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+import java.util.List;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 @SuperBuilder
-public abstract class User {
+@Entity
+@Table(name = "users")
+@Inheritance(strategy = InheritanceType.JOINED)
+
+public class User implements UserDetails {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String firstName;
 
@@ -20,4 +35,36 @@ public abstract class User {
 
     private Boolean isActive;
 
+    public User(String firstName, String lastName, Boolean isActive) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.isActive = isActive;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return UserDetails.super.isAccountNonExpired();
+    }
+
+
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return UserDetails.super.isAccountNonLocked();
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return UserDetails.super.isCredentialsNonExpired();
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }

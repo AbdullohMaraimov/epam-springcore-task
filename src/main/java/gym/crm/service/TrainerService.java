@@ -16,4 +16,9 @@ public interface TrainerService {
 
     ApiResponse<List<TrainerResponse>> findAll();
 
+    ApiResponse<Void> updatePassword(String username, String oldPassword, String newPassword);
+
+    ApiResponse<Void> deActivateUser(String username);
+
+    ApiResponse<Void> activateUser(String username);
 }

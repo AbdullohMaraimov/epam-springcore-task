@@ -3,17 +3,13 @@ package gym.crm.mapper;
 import gym.crm.dto.reponse.TraineeResponse;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.model.Trainee;
-import gym.crm.util.PasswordGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class TraineeMapperTest {
 
@@ -26,10 +22,6 @@ class TraineeMapperTest {
 
     @Test
     void toTrainee() {
-        MockedStatic<PasswordGenerator> passwordGeneratorMockedStatic = mockStatic(PasswordGenerator.class);
-
-        passwordGeneratorMockedStatic.when(PasswordGenerator::generatePassword).thenReturn("password");
-
         TraineeRequest traineeRequest = new TraineeRequest(
                 "Iman",
                 "Gadzhi",
@@ -47,13 +39,12 @@ class TraineeMapperTest {
         assertEquals("Iman.Gadzhi", trainee.getUsername());
         assertEquals(true, trainee.getIsActive());
 
-        passwordGeneratorMockedStatic.verify(PasswordGenerator::generatePassword, times(1));
     }
 
     @Test
     void toTraineeResponse() {
         Trainee trainee = Trainee.builder()
-                .userId(UUID.randomUUID())
+                .id(1L)
                 .firstName("Iman")
                 .lastName("Gadzhi")
                 .username("Iman.Gadzhi")
@@ -64,7 +55,6 @@ class TraineeMapperTest {
 
         TraineeResponse traineeResponse = traineeMapper.toTraineeResponse(trainee);
 
-        assertEquals(trainee.getUserId().toString(), traineeResponse.userId().toString());
         assertEquals("Iman", traineeResponse.firstName());
         assertEquals("Gadzhi", traineeResponse.lastName());
         assertEquals("Iman.Gadzhi", traineeResponse.username());
@@ -76,7 +66,7 @@ class TraineeMapperTest {
     @Test
     void toTraineeResponses() {
         Trainee trainee1 = Trainee.builder()
-                .userId(UUID.randomUUID())
+                .id(1L)
                 .firstName("Iman")
                 .lastName("Gadzhi")
                 .username("Iman.Gadzhi")
@@ -86,7 +76,7 @@ class TraineeMapperTest {
                 .build();
 
         Trainee trainee2 = Trainee.builder()
-                .userId(UUID.randomUUID())
+                .id(2L)
                 .firstName("Jim")
                 .lastName("Rohn")
                 .username("Jim.Rohn")
@@ -100,13 +90,12 @@ class TraineeMapperTest {
         List<TraineeResponse> traineeResponses = traineeMapper.toTraineeResponses(trainees);
 
         assertEquals(2, traineeResponses.size());
-
     }
 
     @Test
     void toUpdatedTrainee() {
         Trainee trainee = Trainee.builder()
-                .userId(UUID.randomUUID())
+                .id(1L)
                 .firstName("Iman")
                 .lastName("Gadzhi")
                 .username("Iman.Gadzhi")
@@ -130,6 +119,5 @@ class TraineeMapperTest {
         assertEquals("UZB", updatedTrainee.getAddress());
         assertEquals(LocalDate.of(2000, 1, 1), updatedTrainee.getDateOfBirth());
         assertEquals(true, updatedTrainee.getIsActive());
-
     }
 }

@@ -2,6 +2,7 @@ package gym.crm.controller;
 
 import gym.crm.dto.reponse.ApiResponse;
 import gym.crm.dto.reponse.TraineeResponse;
+import gym.crm.dto.reponse.TrainerResponse;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.service.TraineeService;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,20 +32,6 @@ class TraineeControllerTest {
     }
 
     @Test
-    void create() {
-        TraineeRequest request = new TraineeRequest("Iman", "Gadzhi", LocalDate.of(2000, 1, 1), "USA", true);
-        ApiResponse<Void> apiResponse = new ApiResponse<>(204, "Trainee created", true);
-
-        when(traineeService.create(any(TraineeRequest.class))).thenReturn(apiResponse);
-
-        ApiResponse<Void> response = traineeController.create(request);
-
-        assertEquals(204, response.statusCode());
-        assertEquals("Trainee created", response.message());
-        verify(traineeService, times(1)).create(any(TraineeRequest.class));
-    }
-
-    @Test
     void update() {
         String username = "Iman.Gadzhi";
         TraineeRequest request = new TraineeRequest("Iman", "Gadzhi", LocalDate.of(2000, 1, 1), "USA", true);
@@ -64,7 +51,7 @@ class TraineeControllerTest {
     @Test
     void findByUsername() {
         String username = "Iman.Gadzhi";
-        TraineeResponse traineeResponse = new TraineeResponse("id", "Iman", "Gadzhi", "Iman.Gadzhi", LocalDate.of(2000, 1, 1), "USA", true);
+        TraineeResponse traineeResponse = new TraineeResponse(1L, "Iman", "Gadzhi", "Iman.Gadzhi", LocalDate.of(2000, 1, 1), "USA", true);
         ApiResponse<TraineeResponse> apiResponse = new ApiResponse<>(200, traineeResponse, "Trainee found", true);
 
         when(traineeService.findByUsername(username)).thenReturn(apiResponse);
@@ -81,8 +68,8 @@ class TraineeControllerTest {
     @Test
     void findAll() {
         List<TraineeResponse> trainees = List.of(
-                new TraineeResponse("id", "Iman", "Gadzhi", "Iman.Gadzhi", LocalDate.of(2000, 1, 1), "USA", true),
-                new TraineeResponse("id", "Ali", "Vali", "Ali.Vali", LocalDate.of(2002, 2, 2), "USA", true)
+                new TraineeResponse(1L, "Iman", "Gadzhi", "Iman.Gadzhi", LocalDate.of(2000, 1, 1), "USA", true),
+                new TraineeResponse(1L, "Ali", "Vali", "Ali.Vali", LocalDate.of(2002, 2, 2), "USA", true)
         );
 
         ApiResponse<List<TraineeResponse>> apiResponse = new ApiResponse<>(200, trainees, "Trainees found", true);
@@ -126,4 +113,55 @@ class TraineeControllerTest {
         verify(traineeService, times(1)).deleteAll();
         verifyNoMoreInteractions(traineeService);
     }
+
+    @Test
+    void deActivateUser() {
+        String username = "Iman.Gadzhi";
+        ApiResponse<Void> apiResponse = new ApiResponse<>(204, "User deactivated", true);
+
+        when(traineeService.deActivateUser(username)).thenReturn(apiResponse);
+
+        ApiResponse<Void> response = traineeController.deActivateUser(username);
+
+        assertEquals(204, response.statusCode());
+        assertEquals("User deactivated", response.message());
+        verify(traineeService, times(1)).deActivateUser(username);
+        verifyNoMoreInteractions(traineeService);
+    }
+
+    @Test
+    void activateUser() {
+        String username = "Iman.Gadzhi";
+        ApiResponse<Void> apiResponse = new ApiResponse<>(204, "User activated", true);
+
+        when(traineeService.activateUser(username)).thenReturn(apiResponse);
+
+        ApiResponse<Void> response = traineeController.activateUser(username);
+
+        assertEquals(204, response.statusCode());
+        assertEquals("User activated", response.message());
+        verify(traineeService, times(1)).activateUser(username);
+        verifyNoMoreInteractions(traineeService);
+    }
+
+    @Test
+    void getAllUnassignedTrainers() {
+        String username = "Iman.Gadzhi";
+        List<TrainerResponse> trainers = List.of(
+                new TrainerResponse(1L, "John", "Doe", "john.doe", "GYM", true),
+                new TrainerResponse(2L, "Jane", "Doe", "jane.doe", "GYM", true)
+        );
+        ApiResponse<List<TrainerResponse>> apiResponse = new ApiResponse<>(200, trainers, "Unassigned trainers found", true);
+
+        when(traineeService.findAllUnassignedTrainers(username)).thenReturn(apiResponse);
+
+        ApiResponse<List<TrainerResponse>> response = traineeController.getAllUnassignedTrainers(username);
+
+        assertEquals(200, response.statusCode());
+        assertEquals("Unassigned trainers found", response.message());
+        assertEquals(trainers, response.data());
+        verify(traineeService, times(1)).findAllUnassignedTrainers(username);
+        verifyNoMoreInteractions(traineeService);
+    }
+
 }

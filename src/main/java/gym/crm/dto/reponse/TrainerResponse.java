@@ -1,7 +1,7 @@
 package gym.crm.dto.reponse;
 
 public record TrainerResponse(
-        String userId,
+        Long userId,
         String firstName,
         String lastName,
         String username,

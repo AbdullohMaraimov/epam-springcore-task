@@ -9,9 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@SuperBuilder
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 public class Trainee extends User{
 
@@ -33,6 +35,17 @@ public class Trainee extends User{
             inverseJoinColumns = @JoinColumn(name = "trainer_id")
     )
     private List<Trainer> trainers;
+
+    public Trainee(String firstName, String lastName, Boolean isActive, LocalDate dateOfBirth, String address) {
+        super(firstName, lastName, isActive);
+        this.dateOfBirth = dateOfBirth;
+        this.address = address;
+    }
+
+    public Trainee(LocalDate dateOfBirth, String address) {
+        this.dateOfBirth = dateOfBirth;
+        this.address = address;
+    }
 
     public void addTrainer(Trainer trainer) {
         trainers.add(trainer);

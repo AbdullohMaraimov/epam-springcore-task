@@ -6,7 +6,9 @@ import gym.crm.dto.request.TrainerRequest;
 import gym.crm.exception.CustomNotFoundException;
 import gym.crm.mapper.TrainerMapper;
 import gym.crm.model.Trainer;
+import gym.crm.model.TrainingType;
 import gym.crm.repository.TrainerDAO;
+import gym.crm.repository.TrainingTypeDAO;
 import gym.crm.service.TrainerService;
 import gym.crm.util.PasswordGenerator;
 import jakarta.transaction.Transactional;
@@ -26,12 +28,19 @@ public class TrainerServiceImpl implements TrainerService {
 
     private final TrainerDAO trainerDAO;
 
+    private final TrainingTypeDAO trainingTypeDAO;
+
     @Override
     @Transactional
     public ApiResponse<Void> create(TrainerRequest trainerRequest) {
         log.debug("Creating new trainer with request: {}", trainerRequest);
         Trainer trainer = trainerMapper.toTrainer(trainerRequest);
         trainer.setPassword(PasswordGenerator.generatePassword());
+        TrainingType trainingType = trainingTypeDAO.findById(trainerRequest.specializationId());
+        if (trainingType == null) {
+            throw new CustomNotFoundException("TrainingType with id : %d not found".formatted(trainerRequest.specializationId()));
+        }
+        trainer.setSpecialization(trainingType);
         if (trainerDAO.isUsernameExists(trainer.getUsername())) {
             trainer.setUsername(trainer.getUsername() + TrainerDAO.index++);
             log.info("Username already exists, changed it to {}", trainer.getUsername());
@@ -51,6 +60,11 @@ public class TrainerServiceImpl implements TrainerService {
             throw new CustomNotFoundException("Trainer not found!");
         }
         Trainer updated = trainerMapper.toUpdatedTrainer(trainer, trainerRequest);
+        TrainingType trainingType = trainingTypeDAO.findById(trainerRequest.specializationId());
+        if (trainingType == null) {
+            throw new CustomNotFoundException("TrainingType with id : %d not found".formatted(trainerRequest.specializationId()));
+        }
+        trainer.setSpecialization(trainingType);
         trainerDAO.update(updated);
         log.info("Trainer updated successfully: {}", updated);
         return new ApiResponse<>(200,true, null, "Successfully updated!");
@@ -130,10 +144,12 @@ public class TrainerServiceImpl implements TrainerService {
         List<Trainer> trainers = trainerDAO.findAll();
         if (trainers.isEmpty()) {
             log.error("No trainers found!");
-            throw new CustomNotFoundException("Trainer not found!");
+            throw new CustomNotFoundException("Trainers not found!");
         }
         List<TrainerResponse> trainerResponses = trainerMapper.toTrainerResponses(trainers);
         log.info("Found {} trainers", trainerResponses.size());
         return new ApiResponse<>(200,true, trainerResponses, "Success!");
     }
+
+
 }

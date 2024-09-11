@@ -12,6 +12,7 @@ import gym.crm.model.TrainingType;
 import gym.crm.repository.TraineeDAO;
 import gym.crm.repository.TrainerDAO;
 import gym.crm.repository.TrainingDAO;
+import gym.crm.repository.TrainingTypeDAO;
 import gym.crm.service.TrainingService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class TrainingServiceImpl implements TrainingService {
     private final TrainerDAO trainerDAO;
     private final TraineeDAO traineeDAO;
     private final TrainingMapper trainingMapper;
+    private final TrainingTypeDAO trainingTypeDAO;
 
     @Override
     @Transactional
@@ -45,6 +47,11 @@ public class TrainingServiceImpl implements TrainingService {
         if (trainee == null) throw new CustomNotFoundException("Trainee not found with id: %d".formatted(trainerId));
 
         Training training = trainingMapper.toEntity(trainingRequest);
+
+        TrainingType trainingType = trainingTypeDAO.findById(trainingRequest.trainingTypeId());
+        training.setTrainee(trainee);
+        training.setTrainer(trainer);
+        training.setTrainingType(trainingType);
         trainingDAO.save(training);
 
         trainee.addTrainer(trainer);

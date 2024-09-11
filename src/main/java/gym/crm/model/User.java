@@ -2,6 +2,7 @@ package gym.crm.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -13,6 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@SuperBuilder
 @Entity
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -32,6 +34,12 @@ public class User implements UserDetails {
     private String password;
 
     private Boolean isActive;
+
+    public User(String firstName, String lastName, Boolean isActive) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.isActive = isActive;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

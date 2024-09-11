@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TrainerDAO {
 
-    public static int index = 0;
+    public static int index = 1;
 
     @PersistenceContext
     private final EntityManager entityManager;

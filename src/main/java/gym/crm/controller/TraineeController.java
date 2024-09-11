@@ -5,7 +5,6 @@ import gym.crm.dto.reponse.TraineeResponse;
 import gym.crm.dto.reponse.TrainerResponse;
 import gym.crm.dto.reponse.TrainingResponse;
 import gym.crm.dto.request.TraineeRequest;
-import gym.crm.model.TrainingType;
 import gym.crm.service.TraineeService;
 import gym.crm.service.TrainingService;
 import jakarta.validation.Valid;

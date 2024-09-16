@@ -106,4 +106,10 @@ public class TrainingServiceImpl implements TrainingService {
         List<TrainingResponse> responses = trainingMapper.toResponses(trainings);
         return new ApiResponse<>(200, responses, "Successfully found!", true);
     }
+
+    @Override
+    public ApiResponse<List<TrainingType>> findAllTrainingTypes() {
+        List<TrainingType> types = trainingTypeRepository.findAll();
+        return new ApiResponse<>(200, true, types, "Successfully found!");
+    }
 }

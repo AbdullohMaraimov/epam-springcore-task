@@ -1,6 +1,7 @@
 package gym.crm.service;
 
 import gym.crm.dto.reponse.ApiResponse;
+import gym.crm.dto.reponse.RegistrationResponse;
 import gym.crm.dto.reponse.TrainerResponse;
 import gym.crm.dto.request.TrainerRequest;
 
@@ -8,9 +9,9 @@ import java.util.List;
 
 public interface TrainerService {
 
-    ApiResponse<Void> create(TrainerRequest trainer);
+    ApiResponse<RegistrationResponse> create(TrainerRequest trainer);
 
-    ApiResponse<Void> update(String username, TrainerRequest trainer);
+    ApiResponse<TrainerResponse> update(String username, TrainerRequest trainer);
 
     ApiResponse<TrainerResponse> findByUsername(String username);
 

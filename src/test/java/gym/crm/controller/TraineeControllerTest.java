@@ -35,11 +35,11 @@ class TraineeControllerTest {
     void update() {
         String username = "Iman.Gadzhi";
         TraineeRequest request = new TraineeRequest("Iman", "Gadzhi", LocalDate.of(2000, 1, 1), "USA", true);
-        ApiResponse<Void> apiResponse = new ApiResponse<>(204, "Trainee updated", true);
+        ApiResponse<TraineeResponse> apiResponse = new ApiResponse<>(204, "Trainee updated", true);
 
         when(traineeService.update(eq(username), any(TraineeRequest.class))).thenReturn(apiResponse);
 
-        ApiResponse<Void> response = traineeController.update(username, request);
+        ApiResponse<TraineeResponse> response = traineeController.update(username, request);
 
         assertEquals(204, response.statusCode());
         assertEquals("Trainee updated", response.message());
@@ -51,7 +51,7 @@ class TraineeControllerTest {
     @Test
     void findByUsername() {
         String username = "Iman.Gadzhi";
-        TraineeResponse traineeResponse = new TraineeResponse(1L, "Iman", "Gadzhi", "Iman.Gadzhi", LocalDate.of(2000, 1, 1), "USA", true);
+        TraineeResponse traineeResponse = new TraineeResponse(1L, "Iman", "Gadzhi", LocalDate.of(2000, 1, 1), "USA", true, null);
         ApiResponse<TraineeResponse> apiResponse = new ApiResponse<>(200, traineeResponse, "Trainee found", true);
 
         when(traineeService.findByUsername(username)).thenReturn(apiResponse);
@@ -68,8 +68,8 @@ class TraineeControllerTest {
     @Test
     void findAll() {
         List<TraineeResponse> trainees = List.of(
-                new TraineeResponse(1L, "Iman", "Gadzhi", "Iman.Gadzhi", LocalDate.of(2000, 1, 1), "USA", true),
-                new TraineeResponse(1L, "Ali", "Vali", "Ali.Vali", LocalDate.of(2002, 2, 2), "USA", true)
+                new TraineeResponse(1L, "Iman", "Gadzhi", LocalDate.of(2000, 1, 1), "USA", true, null),
+                new TraineeResponse(1L, "Ali", "Vali", LocalDate.of(2002, 2, 2), "USA", true, null)
         );
 
         ApiResponse<List<TraineeResponse>> apiResponse = new ApiResponse<>(200, trainees, "Trainees found", true);
@@ -148,8 +148,8 @@ class TraineeControllerTest {
     void getAllUnassignedTrainers() {
         String username = "Iman.Gadzhi";
         List<TrainerResponse> trainers = List.of(
-                new TrainerResponse(1L, "John", "Doe", "john.doe", "GYM", true),
-                new TrainerResponse(2L, "Jane", "Doe", "jane.doe", "GYM", true)
+                new TrainerResponse(1L, "John", "Doe", "GYM", true, null),
+                new TrainerResponse(2L, "Jane", "Doe", "GYM", true, null)
         );
         ApiResponse<List<TrainerResponse>> apiResponse = new ApiResponse<>(200, trainers, "Unassigned trainers found", true);
 

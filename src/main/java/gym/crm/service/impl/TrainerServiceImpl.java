@@ -1,6 +1,7 @@
 package gym.crm.service.impl;
 
 import gym.crm.dto.reponse.ApiResponse;
+import gym.crm.dto.reponse.RegistrationResponse;
 import gym.crm.dto.reponse.TrainerResponse;
 import gym.crm.dto.request.TrainerRequest;
 import gym.crm.exception.CustomNotFoundException;
@@ -32,7 +33,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     @Transactional
-    public ApiResponse<Void> create(TrainerRequest trainerRequest) {
+    public ApiResponse<RegistrationResponse> create(TrainerRequest trainerRequest) {
         log.debug("Creating new trainer with request: {}", trainerRequest);
         Trainer trainer = trainerMapper.toTrainer(trainerRequest);
         trainer.setPassword(PasswordGenerator.generatePassword());
@@ -45,14 +46,15 @@ public class TrainerServiceImpl implements TrainerService {
             trainer.setUsername(trainer.getUsername() + TrainerRepository.index++);
             log.info("Username already exists, changed it to {}", trainer.getUsername());
         }
+        RegistrationResponse registrationResponse = new RegistrationResponse(trainer.getUsername(), trainer.getPassword());
         trainerRepository.save(trainer);
         log.info("Trainer saved successfully: {}", trainer);
-        return new ApiResponse<>(200, "Saved successfully!", true);
+        return new ApiResponse<>(200, true,   registrationResponse, "Saved successfully!");
     }
 
     @Override
     @Transactional
-    public ApiResponse<Void> update(String username, TrainerRequest trainerRequest) {
+    public ApiResponse<TrainerResponse> update(String username, TrainerRequest trainerRequest) {
         log.debug("Updating trainer with username: {}", username);
         Trainer trainer = trainerRepository.findByUsername(username);
         if (trainer == null) {
@@ -64,10 +66,13 @@ public class TrainerServiceImpl implements TrainerService {
         if (trainingType == null) {
             throw new CustomNotFoundException("TrainingType with id : %d not found".formatted(trainerRequest.specializationId()));
         }
-        trainer.setSpecialization(trainingType);
+        updated.setSpecialization(trainingType);
         trainerRepository.update(updated);
+
+        TrainerResponse trainerResponse = trainerMapper.toTrainerResponse(updated);
+
         log.info("Trainer updated successfully: {}", updated);
-        return new ApiResponse<>(200,true, null, "Successfully updated!");
+        return new ApiResponse<>(200,true, trainerResponse, "Successfully updated!");
     }
 
     @Override

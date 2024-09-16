@@ -14,13 +14,12 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @ComponentScan(basePackages = "gym.crm")
 @EnableTransactionManagement
 @RequiredArgsConstructor
-public class AppConfig implements WebMvcConfigurer {
+public class AppConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
 

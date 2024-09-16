@@ -1,6 +1,7 @@
 package gym.crm.controller;
 
 import gym.crm.dto.reponse.ApiResponse;
+import gym.crm.dto.reponse.RegistrationResponse;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.dto.request.TrainerRequest;
 import gym.crm.dto.request.UserLoginRequest;
@@ -32,11 +33,11 @@ class AuthControllerTest {
     @Test
     void registerTrainee() throws IOException {
         TraineeRequest traineeRequest = new TraineeRequest("Iman", "Gadzhi", LocalDate.of(2000, 1, 1), "USA", true);
-        ApiResponse<Void> apiResponse = new ApiResponse<>(201, "Trainee registered successfully", true);
+        ApiResponse<RegistrationResponse> apiResponse = new ApiResponse<>(201, "Trainee registered successfully", true);
 
         when(authService.register(traineeRequest)).thenReturn(apiResponse);
 
-        ApiResponse<Void> response = authController.register(traineeRequest);
+        ApiResponse<RegistrationResponse> response = authController.register(traineeRequest);
 
         assertEquals(201, response.statusCode());
         assertEquals("Trainee registered successfully", response.message());
@@ -46,12 +47,12 @@ class AuthControllerTest {
 
     @Test
     void registerTrainer() throws IOException {
-        TrainerRequest trainerRequest = new TrainerRequest("John", "Doe", 1L);
-        ApiResponse<Void> apiResponse = new ApiResponse<>(201, "Trainer registered successfully", true);
+        TrainerRequest trainerRequest = new TrainerRequest("John", "Doe", 1L, true);
+        ApiResponse<RegistrationResponse> apiResponse = new ApiResponse<>(201, "Trainer registered successfully", true);
 
         when(authService.register(trainerRequest)).thenReturn(apiResponse);
 
-        ApiResponse<Void> response = authController.register(trainerRequest);
+        ApiResponse<RegistrationResponse> response = authController.register(trainerRequest);
 
         assertEquals(201, response.statusCode());
         assertEquals("Trainer registered successfully", response.message());
@@ -63,12 +64,12 @@ class AuthControllerTest {
     void login() {
         UserLoginRequest loginRequest = new UserLoginRequest("Iman.Gadzhi", "password123");
         String token = "jwt-token";
+        ApiResponse<String> response = new ApiResponse<>(200, true, token, "OK");
+        when(authService.login(loginRequest)).thenReturn(response);
 
-        when(authService.login(loginRequest)).thenReturn(token);
+        ApiResponse<String> login = authController.login(loginRequest);
 
-        String response = authController.login(loginRequest);
-
-        assertEquals(token, response);
+        assertEquals(login.data(), token);
         verify(authService, times(1)).login(loginRequest);
         verifyNoMoreInteractions(authService);
     }

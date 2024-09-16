@@ -5,6 +5,7 @@ import gym.crm.dto.request.TraineeRequest;
 import gym.crm.model.Trainee;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -13,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TraineeMapperTest {
 
+    @Mock
     private TraineeMapper traineeMapper;
 
     @BeforeEach
@@ -57,7 +59,6 @@ class TraineeMapperTest {
 
         assertEquals("Iman", traineeResponse.firstName());
         assertEquals("Gadzhi", traineeResponse.lastName());
-        assertEquals("Iman.Gadzhi", traineeResponse.username());
         assertEquals(LocalDate.of(2000, 1, 1), traineeResponse.dateOfBirth());
         assertEquals("USA", traineeResponse.address());
         assertEquals(true, trainee.getIsActive());

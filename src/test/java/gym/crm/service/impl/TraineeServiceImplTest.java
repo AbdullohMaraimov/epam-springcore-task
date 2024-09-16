@@ -1,6 +1,7 @@
 package gym.crm.service.impl;
 
 import gym.crm.dto.reponse.ApiResponse;
+import gym.crm.dto.reponse.RegistrationResponse;
 import gym.crm.dto.reponse.TraineeResponse;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.exception.CustomNotFoundException;
@@ -52,7 +53,7 @@ class TraineeServiceImplTest {
         when(traineeMapper.toTrainee(request)).thenReturn(trainee);
         when(traineeRepository.isUsernameExists(trainee.getUsername())).thenReturn(true);
 
-        ApiResponse<Void> response = traineeService.create(request);
+        ApiResponse<RegistrationResponse> response = traineeService.create(request);
 
         assertEquals("Username already exists, so changed it to " + trainee.getUsername(), response.message());
 
@@ -71,7 +72,7 @@ class TraineeServiceImplTest {
         when(traineeMapper.toTrainee(request)).thenReturn(trainee);
         when(traineeRepository.isUsernameExists(trainee.getUsername())).thenReturn(false);
 
-        ApiResponse<Void> response = traineeService.create(request);
+        ApiResponse<RegistrationResponse> response = traineeService.create(request);
 
         assertEquals("Saved successfully!", response.message());
 
@@ -86,18 +87,20 @@ class TraineeServiceImplTest {
         TraineeRequest request = new TraineeRequest("Jimmy", "Rohn", LocalDate.now(), "USA", true);
         Trainee trainee = new Trainee("Jim", "Rohn", true, LocalDate.now(), "USA");
         Trainee updatedTrainee = new Trainee("Jimmy", "Rohn", true, LocalDate.now(), "USA");
+        TraineeResponse traineeResponse = null;
 
         when(traineeRepository.findByUsername("Jim.Rohn")).thenReturn(trainee);
         when(traineeMapper.toUpdatedTrainee(trainee, request)).thenReturn(updatedTrainee);
+        when(traineeMapper.toTraineeResponse(updatedTrainee)).thenReturn(traineeResponse);
 
-        ApiResponse<Void> response = traineeService.update("Jim.Rohn", request);
+        ApiResponse<TraineeResponse> response = traineeService.update("Jim.Rohn", request);
 
         assertEquals("Successfully updated!", response.message());
 
         verify(traineeRepository, times(1)).findByUsername("Jim.Rohn");
         verify(traineeMapper, times(1)).toUpdatedTrainee(trainee, request);
         verify(traineeRepository, times(1)).update(updatedTrainee);
-        verifyNoMoreInteractions(traineeMapper, traineeRepository);
+        verifyNoMoreInteractions(traineeRepository);
     }
 
     @Test
@@ -163,7 +166,7 @@ class TraineeServiceImplTest {
         Trainee trainee = new Trainee("Jim", "Rohn", true, LocalDate.now(), "USA");
         trainee.setUsername(username);
 
-        TraineeResponse traineeResponse = new TraineeResponse(null, "Jim", "Rohn", username, LocalDate.now(), "USA", true);
+        TraineeResponse traineeResponse = new TraineeResponse(null, "Jim", "Rohn", LocalDate.now(), "USA", true, null);
 
         when(traineeRepository.findByUsername(username)).thenReturn(trainee);
         when(traineeMapper.toTraineeResponse(trainee)).thenReturn(traineeResponse);
@@ -193,7 +196,7 @@ class TraineeServiceImplTest {
     @Test
     public void testFindAllSuccess() {
         List<Trainee> trainees = List.of(new Trainee());
-        List<TraineeResponse> traineeResponses = List.of(new TraineeResponse(null, "Jim", "Rohn", "Jim.Rohn", LocalDate.now(), "USA", true));
+        List<TraineeResponse> traineeResponses = List.of(new TraineeResponse(null, "Jim", "Rohn", LocalDate.now(), "USA", true,null));
 
         when(traineeRepository.findAll()).thenReturn(trainees);
         when(traineeMapper.toTraineeResponses(trainees)).thenReturn(traineeResponses);

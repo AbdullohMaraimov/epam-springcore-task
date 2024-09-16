@@ -1,6 +1,7 @@
 package gym.crm.service;
 
 import gym.crm.dto.reponse.ApiResponse;
+import gym.crm.dto.reponse.RegistrationResponse;
 import gym.crm.dto.reponse.TrainerResponse;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.dto.reponse.TraineeResponse;
@@ -9,9 +10,9 @@ import java.util.List;
 
 public interface TraineeService {
 
-    ApiResponse<Void> create(TraineeRequest trainee);
+    ApiResponse<RegistrationResponse> create(TraineeRequest trainee);
 
-    ApiResponse<Void> update(String username, TraineeRequest trainee);
+    ApiResponse<TraineeResponse> update(String username, TraineeRequest trainee);
 
     ApiResponse<Void> delete(String username);
 

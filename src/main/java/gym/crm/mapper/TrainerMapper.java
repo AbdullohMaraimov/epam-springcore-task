@@ -1,16 +1,24 @@
 package gym.crm.mapper;
 
+import gym.crm.dto.reponse.TraineeResponse;
 import gym.crm.dto.reponse.TrainerResponse;
 import gym.crm.dto.request.TrainerRequest;
 import gym.crm.model.Trainer;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
-@RequiredArgsConstructor
 public class TrainerMapper {
+
+    private TraineeMapper traineeMapper;
+
+    @Autowired
+    public void setTraineeMapper(@Lazy TraineeMapper traineeMapper) {
+        this.traineeMapper = traineeMapper;
+    }
 
     public Trainer toTrainer(TrainerRequest request) {
         Trainer trainer = new Trainer();
@@ -22,13 +30,14 @@ public class TrainerMapper {
     }
 
     public TrainerResponse toTrainerResponse(Trainer trainer) {
+        List<TraineeResponse> traineeResponses = traineeMapper.toTraineeResponses(trainer.getTrainees());
         return new TrainerResponse(
                 trainer.getId(),
                 trainer.getFirstName(),
                 trainer.getLastName(),
-                trainer.getUsername(),
                 trainer.getSpecialization().getName(),
-                trainer.getIsActive()
+                trainer.getIsActive(),
+                traineeResponses
         );
     }
 
@@ -41,6 +50,7 @@ public class TrainerMapper {
     public Trainer toUpdatedTrainer(Trainer trainer, TrainerRequest trainerRequest) {
         trainer.setFirstName(trainerRequest.firstName());
         trainer.setLastName(trainerRequest.lastName());
+        trainer.setIsActive(trainerRequest.isActive());
         return trainer;
     }
 }

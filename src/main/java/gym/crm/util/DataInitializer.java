@@ -111,13 +111,15 @@ public class DataInitializer {
                     String firstName = parts[0];
                     String lastName = parts[1];
                     String specializationName = parts[2];
+                    boolean isActive = Boolean.parseBoolean(parts[3]);
 
                     TrainingType trainingType = trainingTypeRepository.findByTrainingName(specializationName);
 
                     TrainerRequest trainer = new TrainerRequest(
                             firstName,
                             lastName,
-                            trainingType.getId()
+                            trainingType.getId(),
+                            isActive
                     );
                     trainerService.create(trainer);
                     log.info("Trainer created: {}", trainer);
@@ -155,7 +157,7 @@ public class DataInitializer {
 
                     TrainingRequest training = new TrainingRequest(
                             traineeService.findByUsername(traineeUsername).data().userId(),
-                            trainerService.findByUsername(trainerUsername).data().userId(),
+                            trainerService.findByUsername(trainerUsername).data().id(),
                             trainingName,
                             trainingType.getId(),
                             trainingDate,

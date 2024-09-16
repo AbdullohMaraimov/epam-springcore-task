@@ -1,6 +1,7 @@
 package gym.crm.service.impl;
 
 import gym.crm.dto.reponse.ApiResponse;
+import gym.crm.dto.reponse.RegistrationResponse;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.dto.request.TrainerRequest;
 import gym.crm.dto.request.UserLoginRequest;
@@ -28,20 +29,20 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
 
     @Override
-    public ApiResponse<Void> register(TraineeRequest registerDto) {
+    public ApiResponse<RegistrationResponse> register(TraineeRequest registerDto) {
         return traineeService.create(registerDto);
     }
 
     @Override
-    public ApiResponse<Void> register(TrainerRequest registerDto) {
+    public ApiResponse<RegistrationResponse> register(TrainerRequest registerDto) {
         return trainerService.create(registerDto);
     }
 
     @Override
-    public String login(UserLoginRequest loginDto) {
+    public ApiResponse<String> login(UserLoginRequest loginDto) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginDto.username(), loginDto.password()));
         User user = userRepository.findByUsername(loginDto.username());
-        return jwtService.generateToken(user);
+        return new ApiResponse<>(200, true, jwtService.generateToken(user), "OK");
     }
 }

@@ -1,6 +1,7 @@
 package gym.crm.service.impl;
 
 import gym.crm.dto.reponse.ApiResponse;
+import gym.crm.dto.reponse.RegistrationResponse;
 import gym.crm.dto.reponse.TrainerResponse;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.dto.reponse.TraineeResponse;
@@ -35,7 +36,7 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional
-    public ApiResponse<Void> create(TraineeRequest trainee) {
+    public ApiResponse<RegistrationResponse> create(TraineeRequest trainee) {
         log.info("Creating new trainee with request: {}", trainee);
         Trainee newTrainee = traineeMapper.toTrainee(trainee);
         newTrainee.setPassword(PasswordGenerator.generatePassword());
@@ -43,24 +44,27 @@ public class TraineeServiceImpl implements TraineeService {
             newTrainee.setUsername(newTrainee.getUsername() + TraineeRepository.index++);
             traineeRepository.save(newTrainee);
             log.info("Username already exists, changed to {}", newTrainee.getUsername());
-            return new ApiResponse<>(204, "Username already exists, so changed it to %s".formatted(newTrainee.getUsername()), true);
+            RegistrationResponse registrationResponse = new RegistrationResponse(newTrainee.getUsername(), newTrainee.getPassword());
+            return new ApiResponse<>(204, true, registrationResponse, "Username already exists, so changed it to %s".formatted(newTrainee.getUsername()));
         } else {
+            RegistrationResponse registrationResponse = new RegistrationResponse(newTrainee.getUsername(), newTrainee.getPassword());
             traineeRepository.save(newTrainee);
             log.info("Trainee saved successfully: {}", newTrainee);
-            return new ApiResponse<>(204, "Saved successfully!", true);
+            return new ApiResponse<>(204, true, registrationResponse, "Saved successfully!");
         }
     }
 
     @Override
     @Transactional
-    public ApiResponse<Void> update(String username, TraineeRequest traineeRequest) {
+    public ApiResponse<TraineeResponse> update(String username, TraineeRequest traineeRequest) {
         log.info("Updating trainee with username: {}", username);
         Trainee trainee = traineeRepository.findByUsername(username);
         if (trainee != null) {
             Trainee updatedTrainee = traineeMapper.toUpdatedTrainee(trainee, traineeRequest);
+            TraineeResponse traineeResponse = traineeMapper.toTraineeResponse(updatedTrainee);
             traineeRepository.update(updatedTrainee);
             log.info("Trainee updated successfully: {}", updatedTrainee);
-            return new ApiResponse<>(204 , "Successfully updated!", true);
+            return new ApiResponse<>(204 , true,   traineeResponse, "Successfully updated!");
         } else {
             throw new CustomNotFoundException("Trainee with id %s not found".formatted(username));
         }
@@ -122,7 +126,7 @@ public class TraineeServiceImpl implements TraineeService {
             trainingRepository.deleteTrainingByTraineeUsername(username);
             traineeRepository.deleteTraineeByUsername(username);
             log.info("Trainee with username {} deleted successfully", username);
-            return new ApiResponse<>(204, "Deleted successfully!", true);
+            return new ApiResponse<>(200, "Deleted successfully!", true);
         } else {
             throw new CustomNotFoundException("Trainee with username %s not found".formatted(username));
         }

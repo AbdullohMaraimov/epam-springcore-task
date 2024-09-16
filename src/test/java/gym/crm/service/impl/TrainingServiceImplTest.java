@@ -8,9 +8,11 @@ import gym.crm.mapper.TrainingMapper;
 import gym.crm.model.Trainee;
 import gym.crm.model.Trainer;
 import gym.crm.model.Training;
+import gym.crm.model.TrainingType;
 import gym.crm.repository.TraineeRepository;
 import gym.crm.repository.TrainerRepository;
 import gym.crm.repository.TrainingRepository;
+import gym.crm.repository.TrainingTypeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -39,6 +41,9 @@ class TrainingServiceImplTest {
     @Mock
     private TrainingMapper trainingMapper;
 
+    @Mock
+    private TrainingTypeRepository trainingTypeRepository;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -58,10 +63,13 @@ class TrainingServiceImplTest {
         trainee.setTrainers(new ArrayList<>());
         trainee.setId(1L);
 
+        TrainingType trainingType = new TrainingType(1L, "GYM");
+
         Training training = new Training();
 
         when(trainerRepository.findById(1L)).thenReturn(trainer);
         when(traineeRepository.findById(1L)).thenReturn(trainee);
+        when(trainingTypeRepository.findById(1L)).thenReturn(trainingType);
         when(trainingMapper.toEntity(trainingRequest)).thenReturn(training);
 
         ApiResponse<Void> response = trainingService.create(trainingRequest);

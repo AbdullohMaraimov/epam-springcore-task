@@ -39,7 +39,7 @@ class TrainerControllerTest {
     @Test
     void findByUsername() {
         String username = "Iman.Gadzhi";
-        TrainerResponse trainerResponse = new TrainerResponse(1L, "Iman", "Gadzhi", "Iman.Gadzhi", "GYM", true);
+        TrainerResponse trainerResponse = new TrainerResponse(1L, "Iman", "Gadzhi", "GYM", true, null);
         ApiResponse<TrainerResponse> apiResponse = new ApiResponse<>(200, trainerResponse, "Trainer found", true);
 
         when(trainerService.findByUsername(username)).thenReturn(apiResponse);
@@ -57,8 +57,8 @@ class TrainerControllerTest {
     @Test
     void findAll() {
         List<TrainerResponse> trainers = List.of(
-                new TrainerResponse(1L, "John", "Doe", "John.Doe", "Fitness", true),
-                new TrainerResponse(2L, "Jim", "Rohn", "Jim.Rohn", "Yoga", true)
+                new TrainerResponse(1L, "John", "Doe", "Fitness", true, null),
+                new TrainerResponse(2L, "Jim", "Rohn", "Yoga", true, null)
         );
 
         ApiResponse<List<TrainerResponse>> apiResponse = new ApiResponse<>(200, trainers, "Trainers found", true);
@@ -78,12 +78,12 @@ class TrainerControllerTest {
     @Test
     void update() {
         String username = "Jim.Rohn";
-        TrainerRequest request = new TrainerRequest("Jim", "Rohn", 1L);
-        ApiResponse<Void> apiResponse = new ApiResponse<>(204, "Trainer updated", true);
+        TrainerRequest request = new TrainerRequest("Jim", "Rohn", 1L, true);
+        ApiResponse<TrainerResponse> apiResponse = new ApiResponse<>(204, "Trainer updated", true);
 
         when(trainerService.update(eq(username), any(TrainerRequest.class))).thenReturn(apiResponse);
 
-        ApiResponse<Void> response = trainerController.update(username, request);
+        ApiResponse<TrainerResponse> response = trainerController.update(username, request);
 
         assertEquals(204, response.statusCode());
         assertEquals("Trainer updated", response.message());

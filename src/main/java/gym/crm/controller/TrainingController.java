@@ -35,9 +35,9 @@ public class TrainingController {
     @PostMapping
     public ApiResponse<Void> create(@Valid @RequestBody TrainingRequest request) {
         log.info("Creating training: {}", request);
-        ApiResponse<Void> response = trainingService.create(request);
+        trainingService.create(request);
         log.info("Created training: {}", request);
-        return response;
+        return new ApiResponse<>(200,true, null, "Training created successfully!");
     }
 
 
@@ -51,7 +51,8 @@ public class TrainingController {
     @GetMapping("{id}")
     public ApiResponse<TrainingResponse> findById(@PathVariable Long id) {
         log.info("Finding training with ID {}", id);
-        return trainingService.findById(id);
+        TrainingResponse response = trainingService.findById(id);
+        return new ApiResponse<>(200, true, response, "Successfully found");
     }
 
 
@@ -65,7 +66,8 @@ public class TrainingController {
     @GetMapping
     public ApiResponse<List<TrainingResponse>> findAll() {
         log.info("Finding all trainings");
-        return trainingService.findAll();
+        List<TrainingResponse> responses = trainingService.findAll();
+        return new ApiResponse<>(200,true, responses, "Success!");
     }
 
 
@@ -80,7 +82,8 @@ public class TrainingController {
     @GetMapping("/type")
     public ApiResponse<List<TrainingType>> findAllTrainingTypes() {
         log.info("Finding all training types");
-        return trainingService.findAllTrainingTypes();
+        List<TrainingType> trainingTypes = trainingService.findAllTrainingTypes();
+        return new ApiResponse<>(200, true, trainingTypes, "Successfully found!");
     }
 
 }

@@ -29,20 +29,20 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
 
     @Override
-    public ApiResponse<RegistrationResponse> register(TraineeRequest registerDto) {
+    public RegistrationResponse register(TraineeRequest registerDto) {
         return traineeService.create(registerDto);
     }
 
     @Override
-    public ApiResponse<RegistrationResponse> register(TrainerRequest registerDto) {
+    public RegistrationResponse register(TrainerRequest registerDto) {
         return trainerService.create(registerDto);
     }
 
     @Override
-    public ApiResponse<String> login(UserLoginRequest loginDto) {
+    public String login(UserLoginRequest loginDto) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginDto.username(), loginDto.password()));
         User user = userRepository.findByUsername(loginDto.username());
-        return new ApiResponse<>(200, true, jwtService.generateToken(user), "OK");
+        return jwtService.generateToken(user);
     }
 }

@@ -38,7 +38,8 @@ public class TraineeController {
     @PatchMapping("/{username}")
     public ApiResponse<TraineeResponse> update(@PathVariable String username, @Valid @RequestBody TraineeRequest request) {
         log.info("Updating trainee with username {}: {}", username, request);
-        return traineeService.update(username, request);
+        TraineeResponse traineeResponse = traineeService.update(username, request);
+        return new ApiResponse<>(204 , true,   traineeResponse, "Successfully updated!");
     }
 
 
@@ -52,7 +53,8 @@ public class TraineeController {
                                             @RequestParam String oldPassword,
                                             @RequestParam String newPassword) {
         log.info("Updating password for username {}", username);
-        return traineeService.updatePassword(username, oldPassword, newPassword);
+        traineeService.updatePassword(username, oldPassword, newPassword);
+        return new ApiResponse<>(200, "Password successfully updated!", true);
     }
 
 
@@ -64,7 +66,8 @@ public class TraineeController {
     @PatchMapping("/de-activate")
     public ApiResponse<Void> deActivateUser(@RequestParam String username) {
         log.info("Deactivating user with username {}", username);
-        return traineeService.deActivateUser(username);
+        traineeService.deActivateUser(username);
+        return new ApiResponse<>(200, "User deActivated successfully", true);
     }
 
 
@@ -76,7 +79,8 @@ public class TraineeController {
     @PatchMapping("/activate")
     public ApiResponse<Void> activateUser(@RequestParam String username) {
         log.info("Activating user with username {}", username);
-        return traineeService.activateUser(username);
+        traineeService.activateUser(username);
+        return new ApiResponse<>(200, "User deActivated successfully", true);
     }
 
 
@@ -89,7 +93,8 @@ public class TraineeController {
     @GetMapping("/{username}")
     public ApiResponse<TraineeResponse> findByUsername(@PathVariable String username) {
         log.info("Finding trainee with username {}", username);
-        return traineeService.findByUsername(username);
+        TraineeResponse traineeResponse = traineeService.findByUsername(username);
+        return new ApiResponse<>(200, true, traineeResponse, "Successfully found!");
     }
 
 
@@ -101,7 +106,8 @@ public class TraineeController {
     @GetMapping
     public ApiResponse<List<TraineeResponse>> findAll() {
         log.info("Finding all trainees");
-        return traineeService.findAll();
+        List<TraineeResponse> traineeResponses = traineeService.findAll();
+        return new ApiResponse<>(200,true, traineeResponses, "Success!");
     }
 
 
@@ -118,7 +124,8 @@ public class TraineeController {
                                                                    @RequestParam(required = false) String trainerUsername,
                                                                    @RequestParam(required = false) Long trainingTypeId) {
         log.info("Finding trainings for trainee {} from {} to {} with name {} and type {}", username, fromDate, toDate, trainerUsername, trainingTypeId);
-        return trainingService.findTraineeTrainings(username, fromDate, toDate, trainerUsername, trainingTypeId);
+        List<TrainingResponse> responses = trainingService.findTraineeTrainings(username, fromDate, toDate, trainerUsername, trainingTypeId);
+        return new ApiResponse<>(200, responses, "Successfully found!", true);
     }
 
 
@@ -131,7 +138,8 @@ public class TraineeController {
     @GetMapping("/{username}/unassigned-trainers")
     public ApiResponse<List<TrainerResponse>> getAllUnassignedTrainers(@PathVariable String username) {
         log.info("Finding all unassigned trainers for trainee {}", username);
-        return traineeService.findAllUnassignedTrainers(username);
+        List<TrainerResponse> trainerResponses = traineeService.findAllUnassignedTrainers(username);
+        return new ApiResponse<>(200, trainerResponses, "Successfully retrieved", true);
     }
 
 
@@ -143,7 +151,8 @@ public class TraineeController {
     @DeleteMapping("/{username}")
     public ApiResponse<Void> deleteByUsername(@PathVariable String username) {
         log.info("Deleting trainee with username {}", username);
-        return traineeService.delete(username);
+        traineeService.delete(username);
+        return new ApiResponse<>(200, "Deleted successfully!", true);
     }
 
 
@@ -154,7 +163,8 @@ public class TraineeController {
     @DeleteMapping
     public ApiResponse<Void> deleteAll() {
         log.info("Deleting all trainees");
-        return traineeService.deleteAll();
+        traineeService.deleteAll();
+        return new ApiResponse<>( 204,true, null, "All Trainees deleted!");
     }
 
 }

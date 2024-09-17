@@ -9,7 +9,7 @@ import gym.crm.dto.request.UserLoginRequest;
 import java.io.IOException;
 
 public interface AuthService {
-    ApiResponse<RegistrationResponse> register(TraineeRequest registerDto) throws IOException;
-    ApiResponse<RegistrationResponse> register(TrainerRequest registerDto) throws IOException;
-    ApiResponse<String> login(UserLoginRequest loginDto);
+    RegistrationResponse register(TraineeRequest registerDto) throws IOException;
+    RegistrationResponse register(TrainerRequest registerDto) throws IOException;
+    String login(UserLoginRequest loginDto);
 }

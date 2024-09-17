@@ -34,7 +34,8 @@ public class AuthController {
     @PostMapping("/register-trainee")
     public ApiResponse<RegistrationResponse> register(@RequestBody @Valid TraineeRequest dto) throws IOException {
         log.info("Registering trainee with the request : {}", dto);
-        return authService.register(dto);
+        RegistrationResponse registrationResponse = authService.register(dto);
+        return new ApiResponse<>(204, true, registrationResponse, "Saved successfully!");
     }
 
     @Operation(summary = "Register a new trainer", description = "This endpoint registers a new trainer using the provided request data.")
@@ -47,7 +48,8 @@ public class AuthController {
     @PostMapping("/register-trainer")
     public ApiResponse<RegistrationResponse> register(@RequestBody @Valid TrainerRequest dto) throws IOException {
         log.info("Registering trainer with the request : {}", dto);
-        return authService.register(dto);
+        RegistrationResponse registrationResponse = authService.register(dto);
+        return new ApiResponse<>(200, true,   registrationResponse, "Saved successfully!");
     }
 
     @Operation(summary = "Login", description = "This endpoint allows users to login with their username and password. A JWT token is returned upon successful authentication.")
@@ -62,7 +64,8 @@ public class AuthController {
     @GetMapping("/login")
     public ApiResponse<String> login(@Valid @RequestBody UserLoginRequest dto) {
         log.info("Logging in with username : {}", dto.username());
-        return authService.login(dto);
+        String login = authService.login(dto);
+        return new ApiResponse<>(200, true, login, "OK");
     }
 
 }

@@ -34,7 +34,8 @@ public class TrainerController {
     @GetMapping("/{username}")
     public ApiResponse<TrainerResponse> findByUsername(@PathVariable String username) {
         log.info("Finding trainer with username {}", username);
-        return trainerService.findByUsername(username);
+        TrainerResponse trainerResponse = trainerService.findByUsername(username);
+        return new ApiResponse<>(200,true, trainerResponse, "Successfully found!");
     }
 
 
@@ -46,7 +47,8 @@ public class TrainerController {
     @GetMapping
     public ApiResponse<List<TrainerResponse>> findAll() {
         log.info("Finding all trainers");
-        return trainerService.findAll();
+        List<TrainerResponse> trainerResponses = trainerService.findAll();
+        return new ApiResponse<>(200,true, trainerResponses, "Success!");
     }
 
 
@@ -61,7 +63,8 @@ public class TrainerController {
         log.info("Getting trainings for trainer {} from {} to {}, trainee: {}",
                 username, fromDate, toDate, traineeName);
 
-        return trainingService.getTrainingsByTrainer(username, fromDate, toDate, traineeName);
+        List<TrainingResponse> responses = trainingService.getTrainingsByTrainer(username, fromDate, toDate, traineeName);
+        return new ApiResponse<>(200, responses, "Successfully found!", true);
     }
 
 
@@ -72,7 +75,8 @@ public class TrainerController {
     @PutMapping("/{username}")
     public ApiResponse<TrainerResponse> update(@PathVariable String username,@Valid @RequestBody TrainerRequest request) {
         log.info("Updating trainer with username {}: {}", username, request);
-        return trainerService.update(username, request);
+        TrainerResponse trainerResponse = trainerService.update(username, request);
+        return new ApiResponse<>(200,true, trainerResponse, "Successfully updated!");
     }
 
 
@@ -84,7 +88,8 @@ public class TrainerController {
                                             @RequestParam String oldPassword,
                                             @RequestParam String newPassword) {
         log.info("Updating password for trainer {}", username);
-        return trainerService.updatePassword(username, oldPassword, newPassword);
+        trainerService.updatePassword(username, oldPassword, newPassword);
+        return new ApiResponse<>(200, "Password update successful", true);
     }
 
 
@@ -94,7 +99,8 @@ public class TrainerController {
     @PatchMapping("/de-activate")
     public ApiResponse<Void> deActivateUser(@RequestParam String username) {
         log.info("Deactivating trainer {}", username);
-        return trainerService.deActivateUser(username);
+        trainerService.deActivateUser(username);
+        return new ApiResponse<>(200, "User deActivated successfully", true);
     }
 
 
@@ -104,7 +110,8 @@ public class TrainerController {
     @PatchMapping("/activate")
     public ApiResponse<Void> activateUser(@RequestParam String username) {
         log.info("Activating trainer {}", username);
-        return trainerService.activateUser(username);
+        trainerService.activateUser(username);
+        return new ApiResponse<>(200, "User Activated successfully", true);
     }
 
 }

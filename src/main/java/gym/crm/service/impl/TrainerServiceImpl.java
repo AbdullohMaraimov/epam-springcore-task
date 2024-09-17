@@ -33,7 +33,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     @Transactional
-    public ApiResponse<RegistrationResponse> create(TrainerRequest trainerRequest) {
+    public RegistrationResponse create(TrainerRequest trainerRequest) {
         log.debug("Creating new trainer with request: {}", trainerRequest);
         Trainer trainer = trainerMapper.toTrainer(trainerRequest);
         trainer.setPassword(PasswordGenerator.generatePassword());
@@ -49,12 +49,12 @@ public class TrainerServiceImpl implements TrainerService {
         RegistrationResponse registrationResponse = new RegistrationResponse(trainer.getUsername(), trainer.getPassword());
         trainerRepository.save(trainer);
         log.info("Trainer saved successfully: {}", trainer);
-        return new ApiResponse<>(200, true,   registrationResponse, "Saved successfully!");
+        return registrationResponse;
     }
 
     @Override
     @Transactional
-    public ApiResponse<TrainerResponse> update(String username, TrainerRequest trainerRequest) {
+    public TrainerResponse update(String username, TrainerRequest trainerRequest) {
         log.debug("Updating trainer with username: {}", username);
         Trainer trainer = trainerRepository.findByUsername(username);
         if (trainer == null) {
@@ -72,12 +72,12 @@ public class TrainerServiceImpl implements TrainerService {
         TrainerResponse trainerResponse = trainerMapper.toTrainerResponse(updated);
 
         log.info("Trainer updated successfully: {}", updated);
-        return new ApiResponse<>(200,true, trainerResponse, "Successfully updated!");
+        return trainerResponse;
     }
 
     @Override
     @Transactional
-    public ApiResponse<Void> updatePassword(String username, String oldPassword, String newPassword) {
+    public void updatePassword(String username, String oldPassword, String newPassword) {
         log.debug("Updating password for trainer {}", username);
         Trainer trainer = trainerRepository.findByUsername(username);
         if (trainer == null){
@@ -89,12 +89,11 @@ public class TrainerServiceImpl implements TrainerService {
         trainer.setPassword(newPassword);
         trainerRepository.save(trainer);
         log.info("Password updated successfully for trainer {}", username);
-        return new ApiResponse<>(200, "Password update successful", true);
     }
 
     @Override
     @Transactional
-    public ApiResponse<Void> deActivateUser(String username) {
+    public void deActivateUser(String username) {
         log.debug("Deactivating trainer with username {}", username);
         Trainer trainer = trainerRepository.findByUsername(username);
         if (trainer == null) {
@@ -108,12 +107,11 @@ public class TrainerServiceImpl implements TrainerService {
         trainer.setIsActive(false);
         trainerRepository.save(trainer);
         log.info("Trainer {} deactivated successfully", username);
-        return new ApiResponse<>(200, "User deActivated successfully", true);
     }
 
     @Override
     @Transactional
-    public ApiResponse<Void> activateUser(String username) {
+    public void activateUser(String username) {
         log.debug("Activating trainer with username {}", username);
         Trainer trainer = trainerRepository.findByUsername(username);
         if (trainer == null) {
@@ -127,11 +125,10 @@ public class TrainerServiceImpl implements TrainerService {
         trainer.setIsActive(true);
         trainerRepository.save(trainer);
         log.info("Trainer {} activated successfully", username);
-        return new ApiResponse<>(200, "User Activated successfully", true);
     }
 
     @Override
-    public ApiResponse<TrainerResponse> findByUsername(String username) {
+    public TrainerResponse findByUsername(String username) {
         log.debug("Finding trainer with username: {}", username);
         Trainer trainer = trainerRepository.findByUsername(username);
         if (trainer == null) {
@@ -140,11 +137,11 @@ public class TrainerServiceImpl implements TrainerService {
         }
         TrainerResponse trainerResponse = trainerMapper.toTrainerResponse(trainer);
         log.info("Trainer found: {}", trainerResponse);
-        return new ApiResponse<>(200,true, trainerResponse, "Successfully found!");
+        return trainerResponse;
     }
 
     @Override
-    public ApiResponse<List<TrainerResponse>> findAll() {
+    public List<TrainerResponse> findAll() {
         log.debug("Finding all trainers");
         List<Trainer> trainers = trainerRepository.findAll();
         if (trainers.isEmpty()) {
@@ -153,7 +150,7 @@ public class TrainerServiceImpl implements TrainerService {
         }
         List<TrainerResponse> trainerResponses = trainerMapper.toTrainerResponses(trainers);
         log.info("Found {} trainers", trainerResponses.size());
-        return new ApiResponse<>(200,true, trainerResponses, "Success!");
+        return trainerResponses;
     }
 
 

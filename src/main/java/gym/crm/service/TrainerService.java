@@ -9,17 +9,17 @@ import java.util.List;
 
 public interface TrainerService {
 
-    ApiResponse<RegistrationResponse> create(TrainerRequest trainer);
+    RegistrationResponse create(TrainerRequest trainer);
 
-    ApiResponse<TrainerResponse> update(String username, TrainerRequest trainer);
+    TrainerResponse update(String username, TrainerRequest trainer);
 
-    ApiResponse<TrainerResponse> findByUsername(String username);
+    TrainerResponse findByUsername(String username);
 
-    ApiResponse<List<TrainerResponse>> findAll();
+    List<TrainerResponse> findAll();
 
-    ApiResponse<Void> updatePassword(String username, String oldPassword, String newPassword);
+    void updatePassword(String username, String oldPassword, String newPassword);
 
-    ApiResponse<Void> deActivateUser(String username);
+    void deActivateUser(String username);
 
-    ApiResponse<Void> activateUser(String username);
+    void activateUser(String username);
 }

@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Slf4j
 @Repository
 @RequiredArgsConstructor
@@ -40,5 +42,14 @@ public class TrainingTypeRepository {
             log.error("Training type with name : %s not found".formatted(specializationName));
             return null;
         }
+    }
+
+    public List<TrainingType> findAll() {
+        List<TrainingType> trainingTypes = entityManager.createQuery("from TrainingType", TrainingType.class)
+                .getResultList();
+        if (trainingTypes.isEmpty()) {
+            throw new CustomNotFoundException("No training types are found");
+        }
+        return trainingTypes;
     }
 }

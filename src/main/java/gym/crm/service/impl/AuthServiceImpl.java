@@ -1,6 +1,7 @@
 package gym.crm.service.impl;
 
 import gym.crm.dto.reponse.ApiResponse;
+import gym.crm.dto.reponse.RegistrationResponse;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.dto.request.TrainerRequest;
 import gym.crm.dto.request.UserLoginRequest;
@@ -28,12 +29,12 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
 
     @Override
-    public ApiResponse<Void> register(TraineeRequest registerDto) {
+    public RegistrationResponse register(TraineeRequest registerDto) {
         return traineeService.create(registerDto);
     }
 
     @Override
-    public ApiResponse<Void> register(TrainerRequest registerDto) {
+    public RegistrationResponse register(TrainerRequest registerDto) {
         return trainerService.create(registerDto);
     }
 

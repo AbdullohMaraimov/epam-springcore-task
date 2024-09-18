@@ -8,9 +8,11 @@ import gym.crm.mapper.TrainingMapper;
 import gym.crm.model.Trainee;
 import gym.crm.model.Trainer;
 import gym.crm.model.Training;
+import gym.crm.model.TrainingType;
 import gym.crm.repository.TraineeRepository;
 import gym.crm.repository.TrainerRepository;
 import gym.crm.repository.TrainingRepository;
+import gym.crm.repository.TrainingTypeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -39,6 +41,9 @@ class TrainingServiceImplTest {
     @Mock
     private TrainingMapper trainingMapper;
 
+    @Mock
+    private TrainingTypeRepository trainingTypeRepository;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -58,16 +63,16 @@ class TrainingServiceImplTest {
         trainee.setTrainers(new ArrayList<>());
         trainee.setId(1L);
 
+        TrainingType trainingType = new TrainingType(1L, "GYM");
+
         Training training = new Training();
 
         when(trainerRepository.findById(1L)).thenReturn(trainer);
         when(traineeRepository.findById(1L)).thenReturn(trainee);
+        when(trainingTypeRepository.findById(1L)).thenReturn(trainingType);
         when(trainingMapper.toEntity(trainingRequest)).thenReturn(training);
 
-        ApiResponse<Void> response = trainingService.create(trainingRequest);
-
-        assertTrue(response.success());
-        assertEquals("Training created successfully!", response.message());
+        trainingService.create(trainingRequest);
 
         verify(trainerRepository, times(1)).findById(1L);
         verify(traineeRepository, times(1)).findById(1L);
@@ -119,10 +124,9 @@ class TrainingServiceImplTest {
         when(trainingRepository.findById(trainingId)).thenReturn(training);
         when(trainingMapper.toResponse(training)).thenReturn(trainingResponse);
 
-        ApiResponse<TrainingResponse> response = trainingService.findById(trainingId);
+        TrainingResponse response = trainingService.findById(trainingId);
 
-        assertEquals("Successfully found", response.message());
-        assertEquals(trainingResponse, response.data());
+        assertEquals(trainingResponse, response);
 
         verify(trainingRepository, times(1)).findById(trainingId);
         verify(trainingMapper, times(1)).toResponse(training);
@@ -151,11 +155,9 @@ class TrainingServiceImplTest {
         when(trainingRepository.findAll()).thenReturn(trainings);
         when(trainingMapper.toResponses(trainings)).thenReturn(trainingResponses);
 
-        ApiResponse<List<TrainingResponse>> response = trainingService.findAll();
+        List<TrainingResponse> response = trainingService.findAll();
 
-        assertEquals(true, response.success());
-        assertEquals("Success!", response.message());
-        assertEquals(trainingResponses, response.data());
+        assertEquals(trainingResponses, response);
 
         verify(trainingRepository, times(1)).isTrainingDBEmpty();
         verify(trainingRepository, times(1)).findAll();
@@ -180,11 +182,9 @@ class TrainingServiceImplTest {
         when(trainingRepository.findAllByCriteria(username, fromDate, toDate, trainerName, trainingTypeId)).thenReturn(mockTrainings);
         when(trainingMapper.toResponses(mockTrainings)).thenReturn(mockResponses);
 
-        ApiResponse<List<TrainingResponse>> response = trainingService.findTraineeTrainings(username, fromDate, toDate, trainerName, trainingTypeId);
+        List<TrainingResponse> response = trainingService.findTraineeTrainings(username, fromDate, toDate, trainerName, trainingTypeId);
 
-        assertEquals(200, response.statusCode());
-        assertTrue(response.success());
-        assertEquals("Successfully found!", response.message());
+        assertEquals(mockResponses, response);
 
         verify(trainingRepository, times(1)).findAllByCriteria(username, fromDate, toDate, trainerName, trainingTypeId);
     }
@@ -205,11 +205,9 @@ class TrainingServiceImplTest {
         when(trainingRepository.findAllByTrainerAndCategory(username, fromDate, toDate, traineeName)).thenReturn(mockTrainings);
         when(trainingMapper.toResponses(mockTrainings)).thenReturn(mockResponses);
 
-        ApiResponse<List<TrainingResponse>> response = trainingService.getTrainingsByTrainer(username, fromDate, toDate, traineeName);
+        List<TrainingResponse> response = trainingService.getTrainingsByTrainer(username, fromDate, toDate, traineeName);
 
-        assertEquals(true, response.success());
-        assertTrue(response.success());
-        assertEquals("Successfully found!", response.message());
+        assertEquals(mockResponses, response);
 
         verify(trainingRepository, times(1)).findAllByTrainerAndCategory(username, fromDate, toDate, traineeName);
     }

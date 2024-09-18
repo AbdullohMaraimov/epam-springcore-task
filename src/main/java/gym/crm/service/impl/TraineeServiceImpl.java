@@ -1,6 +1,7 @@
 package gym.crm.service.impl;
 
 import gym.crm.dto.reponse.ApiResponse;
+import gym.crm.dto.reponse.RegistrationResponse;
 import gym.crm.dto.reponse.TrainerResponse;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.dto.reponse.TraineeResponse;
@@ -35,32 +36,35 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional
-    public ApiResponse<Void> create(TraineeRequest trainee) {
+    public RegistrationResponse create(TraineeRequest trainee) {
         log.info("Creating new trainee with request: {}", trainee);
         Trainee newTrainee = traineeMapper.toTrainee(trainee);
         newTrainee.setPassword(PasswordGenerator.generatePassword());
+        RegistrationResponse registrationResponse = null;
         if(traineeRepository.isUsernameExists(newTrainee.getUsername())) {
             newTrainee.setUsername(newTrainee.getUsername() + TraineeRepository.index++);
             traineeRepository.save(newTrainee);
             log.info("Username already exists, changed to {}", newTrainee.getUsername());
-            return new ApiResponse<>(204, "Username already exists, so changed it to %s".formatted(newTrainee.getUsername()), true);
+            registrationResponse = new RegistrationResponse(newTrainee.getUsername(), newTrainee.getPassword());
         } else {
+            registrationResponse = new RegistrationResponse(newTrainee.getUsername(), newTrainee.getPassword());
             traineeRepository.save(newTrainee);
             log.info("Trainee saved successfully: {}", newTrainee);
-            return new ApiResponse<>(204, "Saved successfully!", true);
         }
+        return registrationResponse;
     }
 
     @Override
     @Transactional
-    public ApiResponse<Void> update(String username, TraineeRequest traineeRequest) {
+    public TraineeResponse update(String username, TraineeRequest traineeRequest) {
         log.info("Updating trainee with username: {}", username);
         Trainee trainee = traineeRepository.findByUsername(username);
         if (trainee != null) {
             Trainee updatedTrainee = traineeMapper.toUpdatedTrainee(trainee, traineeRequest);
+            TraineeResponse traineeResponse = traineeMapper.toTraineeResponse(updatedTrainee);
             traineeRepository.update(updatedTrainee);
             log.info("Trainee updated successfully: {}", updatedTrainee);
-            return new ApiResponse<>(204 , "Successfully updated!", true);
+            return traineeResponse;
         } else {
             throw new CustomNotFoundException("Trainee with id %s not found".formatted(username));
         }
@@ -68,50 +72,47 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional
-    public ApiResponse<Void> updatePassword(String username, String oldPassword, String newPassword) {
+    public void updatePassword(String username, String oldPassword, String newPassword) {
         log.info("Updating password for username {}", username);
         Trainee trainee = traineeRepository.findByUsername(username);
         if (trainee == null || !Objects.equals(trainee.getPassword(), oldPassword)) {
-            return new ApiResponse<>(400, "Update password operation failed", false);
+            throw new IllegalArgumentException("Update password operation failed");
         }
         trainee.setPassword(newPassword);
         traineeRepository.save(trainee);
-        return new ApiResponse<>(200, "Password successfully updated!", true);
     }
 
     @Override
-    public ApiResponse<Void> deActivateUser(String username) {
+    public void deActivateUser(String username) {
         log.info("Deactivating user with username: {}", username);
         Trainee trainee = traineeRepository.findByUsername(username);
         if (trainee == null) {
-            return new ApiResponse<>(400, "DeActivate operation failed", false);
+            throw new IllegalArgumentException("DeActivate operation failed, because trinee is not found!");
         }
         if (!trainee.getIsActive()) {
-            return new ApiResponse<>(400, "User already inactive", false);
+            throw new IllegalArgumentException("User already inactive");
         }
         trainee.setIsActive(false);
         traineeRepository.save(trainee);
-        return new ApiResponse<>(200, "User deActivated successfully", true);
     }
 
     @Override
-    public ApiResponse<Void> activateUser(String username) {
+    public void activateUser(String username) {
         log.info("Activating user with username: {}", username);
         Trainee trainee = traineeRepository.findByUsername(username);
         if (trainee == null) {
-            return new ApiResponse<>(400, "Activate operation failed", false);
+            throw new IllegalArgumentException("Activate operation failed");
         }
         if (trainee.getIsActive()) {
-            return new ApiResponse<>(400, "User already active", false);
+            throw new IllegalArgumentException("User already active");
         }
         trainee.setIsActive(true);
         traineeRepository.save(trainee);
-        return new ApiResponse<>(200, "User deActivated successfully", true);
     }
 
     @Override
     @Transactional
-    public ApiResponse<Void> delete(String username) {
+    public void delete(String username) {
         log.info("Deleting trainee with username: {}", username);
         Trainee trainee = traineeRepository.findByUsername(username);
         if (trainee != null) {
@@ -122,37 +123,34 @@ public class TraineeServiceImpl implements TraineeService {
             trainingRepository.deleteTrainingByTraineeUsername(username);
             traineeRepository.deleteTraineeByUsername(username);
             log.info("Trainee with username {} deleted successfully", username);
-            return new ApiResponse<>(204, "Deleted successfully!", true);
         } else {
             throw new CustomNotFoundException("Trainee with username %s not found".formatted(username));
         }
     }
 
     @Override
-    public ApiResponse<TraineeResponse> findByUsername(String username) {
+    public TraineeResponse findByUsername(String username) {
         log.info("Finding trainee with username: {}", username);
         Trainee trainee = traineeRepository.findByUsername(username);
         if (trainee != null) {
-            TraineeResponse traineeResponse = traineeMapper.toTraineeResponse(trainee);
-            return new ApiResponse<>(200, true, traineeResponse, "Successfully found!");
+            return traineeMapper.toTraineeResponse(trainee);
         } else {
             throw new CustomNotFoundException("Trainee with username %s not found".formatted(username));
         }
     }
 
     @Override
-    public ApiResponse<List<TraineeResponse>> findAll() {
+    public List<TraineeResponse> findAll() {
         log.info("Finding all trainees");
         List<Trainee> trainees = traineeRepository.findAll();
         if (trainees.isEmpty()) {
             throw new CustomNotFoundException("Trainees not found!");
         }
-        List<TraineeResponse> traineeResponses = traineeMapper.toTraineeResponses(trainees);
-        return new ApiResponse<>(200,true, traineeResponses, "Success!");
+        return traineeMapper.toTraineeResponses(trainees);
     }
 
     @Override
-    public ApiResponse<List<TrainerResponse>> findAllUnassignedTrainers(String username) {
+    public List<TrainerResponse> findAllUnassignedTrainers(String username) {
         log.info("Finding all unassigned trainers for trainee with username: {}", username);
         Trainee trainee = traineeRepository.findByUsername(username);
         if (trainee == null) {
@@ -161,16 +159,14 @@ public class TraineeServiceImpl implements TraineeService {
         List<Trainer> trainers = trainee.getTrainers();
         List<Trainer> allTrainers = trainerRepository.findAll();
         allTrainers.removeAll(trainers);
-        List<TrainerResponse> trainerResponses = trainerMapper.toTrainerResponses(allTrainers);
-        return new ApiResponse<>(200, trainerResponses, "Successfully retrieved", true);
+        return trainerMapper.toTrainerResponses(allTrainers);
     }
 
     @Override
     @Transactional
-    public ApiResponse<Void> deleteAll() {
+    public void deleteAll() {
         log.info("Deleting all trainees");
         traineeRepository.deleteAll();
         log.info("All trainees deleted");
-        return new ApiResponse<>( 204,true, null, "All Trainees deleted!");
     }
 }

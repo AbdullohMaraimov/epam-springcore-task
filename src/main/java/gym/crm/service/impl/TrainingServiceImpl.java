@@ -35,7 +35,7 @@ public class TrainingServiceImpl implements TrainingService {
 
     @Override
     @Transactional
-    public ApiResponse<Void> create(TrainingRequest trainingRequest) {
+    public void create(TrainingRequest trainingRequest) {
         Long traineeId = trainingRequest.traineeId();
         Long trainerId = trainingRequest.trainerId();
 
@@ -61,12 +61,11 @@ public class TrainingServiceImpl implements TrainingService {
         trainerRepository.update(trainer);
 
         log.info("Training created successfully with ID: {}", training.getId());
-        return new ApiResponse<>(200,true, null, "Training created successfully!");
     }
 
     @Override
     @Transactional
-    public ApiResponse<TrainingResponse> findById(Long id) {
+    public TrainingResponse findById(Long id) {
         log.debug("Finding training with ID: {}", id);
         Training training = trainingRepository.findById(id);
         if (training == null) {
@@ -74,12 +73,12 @@ public class TrainingServiceImpl implements TrainingService {
         }
         TrainingResponse response = trainingMapper.toResponse(training);
         log.info("Training found with ID: {}", id);
-        return new ApiResponse<>(200,true, response, "Successfully found");
+        return response;
     }
 
     @Override
     @Transactional
-    public ApiResponse<List<TrainingResponse>> findAll() {
+    public List<TrainingResponse> findAll() {
         log.debug("Finding all trainings");
         if (trainingRepository.isTrainingDBEmpty()) {
             log.error("No trainings found!");
@@ -88,22 +87,25 @@ public class TrainingServiceImpl implements TrainingService {
         List<Training> trainings = trainingRepository.findAll();
         List<TrainingResponse> trainingResponses = trainingMapper.toResponses(trainings);
         log.info("Found {} trainings", trainingResponses.size());
-        return new ApiResponse<>(200,true, trainingResponses, "Success!");
+        return trainingResponses;
     }
 
     @Override
-    public ApiResponse<List<TrainingResponse>> findTraineeTrainings(String username, LocalDate fromDate, LocalDate toDate, String trainerName, Long trainingTypeId) {
+    public List<TrainingResponse> findTraineeTrainings(String username, LocalDate fromDate, LocalDate toDate, String trainerName, Long trainingTypeId) {
         log.debug("Finding trainee trainings for username: {}", username);
         List<Training> trainings = trainingRepository.findAllByCriteria(username, fromDate, toDate, trainerName, trainingTypeId);
-        List<TrainingResponse> responses = trainingMapper.toResponses(trainings);
-        return new ApiResponse<>(200, responses, "Successfully found!", true);
+        return trainingMapper.toResponses(trainings);
     }
 
     @Override
-    public ApiResponse<List<TrainingResponse>> getTrainingsByTrainer(String username, LocalDate fromDate, LocalDate toDate, String traineeName) {
+    public List<TrainingResponse> getTrainingsByTrainer(String username, LocalDate fromDate, LocalDate toDate, String traineeName) {
         log.debug("Finding trainings by trainer: {}", username);
         List<Training> trainings = trainingRepository.findAllByTrainerAndCategory(username, fromDate, toDate, traineeName);
-        List<TrainingResponse> responses = trainingMapper.toResponses(trainings);
-        return new ApiResponse<>(200, responses, "Successfully found!", true);
+        return trainingMapper.toResponses(trainings);
+    }
+
+    @Override
+    public List<TrainingType> findAllTrainingTypes() {
+        return trainingTypeRepository.findAll();
     }
 }

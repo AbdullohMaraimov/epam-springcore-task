@@ -25,7 +25,8 @@ class TrainerMapperTest {
         TrainerRequest trainerRequest = new TrainerRequest(
                 "Iman",
                 "Gadzhi",
-                1L
+                1L,
+                true
         );
 
         Trainer trainer = trainerMapper.toTrainer(trainerRequest);
@@ -48,7 +49,6 @@ class TrainerMapperTest {
 
         assertEquals(trainer.getFirstName(), response.firstName());
         assertEquals(trainer.getLastName(), response.lastName());
-        assertEquals(trainer.getUsername(), response.username());
         assertEquals(trainer.getSpecialization().getName(), response.specialization());
         assertEquals(trainer.getIsActive(), response.isActive());
     }
@@ -88,7 +88,8 @@ class TrainerMapperTest {
         TrainerRequest updatedRequest = new TrainerRequest(
                 "John",
                 "Doe",
-                3L
+                3L,
+                true
         );
 
         Trainer updatedTrainer = trainerMapper.toUpdatedTrainer(trainer, updatedRequest);

@@ -1,6 +1,7 @@
 package gym.crm.service;
 
 import gym.crm.dto.reponse.ApiResponse;
+import gym.crm.dto.reponse.RegistrationResponse;
 import gym.crm.dto.reponse.TrainerResponse;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.dto.reponse.TraineeResponse;
@@ -9,23 +10,23 @@ import java.util.List;
 
 public interface TraineeService {
 
-    ApiResponse<Void> create(TraineeRequest trainee);
+    RegistrationResponse create(TraineeRequest trainee);
 
-    ApiResponse<Void> update(String username, TraineeRequest trainee);
+    TraineeResponse update(String username, TraineeRequest trainee);
 
-    ApiResponse<Void> delete(String username);
+    void delete(String username);
 
-    ApiResponse<TraineeResponse> findByUsername(String username);
+    TraineeResponse findByUsername(String username);
 
-    ApiResponse<List<TraineeResponse>> findAll();
+    List<TraineeResponse> findAll();
 
-    ApiResponse<Void> deleteAll();
+    void deleteAll();
 
-    ApiResponse<Void> updatePassword(String username, String oldPassword, String newPassword);
+    void updatePassword(String username, String oldPassword, String newPassword);
 
-    ApiResponse<Void> deActivateUser(String username);
+    void deActivateUser(String username);
 
-    ApiResponse<Void> activateUser(String username);
+    void activateUser(String username);
 
-    ApiResponse<List<TrainerResponse>> findAllUnassignedTrainers(String username);
+    List<TrainerResponse> findAllUnassignedTrainers(String username);
 }

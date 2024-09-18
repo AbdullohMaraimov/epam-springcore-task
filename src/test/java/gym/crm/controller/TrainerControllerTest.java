@@ -39,15 +39,14 @@ class TrainerControllerTest {
     @Test
     void findByUsername() {
         String username = "Iman.Gadzhi";
-        TrainerResponse trainerResponse = new TrainerResponse(1L, "Iman", "Gadzhi", "Iman.Gadzhi", "GYM", true);
-        ApiResponse<TrainerResponse> apiResponse = new ApiResponse<>(200, trainerResponse, "Trainer found", true);
+        TrainerResponse trainerResponse = new TrainerResponse(1L, "Iman", "Gadzhi", "GYM", true, null);
 
-        when(trainerService.findByUsername(username)).thenReturn(apiResponse);
+        when(trainerService.findByUsername(username)).thenReturn(trainerResponse);
 
         ApiResponse<TrainerResponse> response = trainerController.findByUsername(username);
 
         assertEquals(200, response.statusCode());
-        assertEquals("Trainer found", response.message());
+        assertEquals("Successfully found!", response.message());
         assertEquals(trainerResponse, response.data());
 
         verify(trainerService, times(1)).findByUsername(username);
@@ -57,18 +56,16 @@ class TrainerControllerTest {
     @Test
     void findAll() {
         List<TrainerResponse> trainers = List.of(
-                new TrainerResponse(1L, "John", "Doe", "John.Doe", "Fitness", true),
-                new TrainerResponse(2L, "Jim", "Rohn", "Jim.Rohn", "Yoga", true)
+                new TrainerResponse(1L, "John", "Doe", "Fitness", true, null),
+                new TrainerResponse(2L, "Jim", "Rohn", "Yoga", true, null)
         );
 
-        ApiResponse<List<TrainerResponse>> apiResponse = new ApiResponse<>(200, trainers, "Trainers found", true);
-
-        when(trainerService.findAll()).thenReturn(apiResponse);
+        when(trainerService.findAll()).thenReturn(trainers);
 
         ApiResponse<List<TrainerResponse>> response = trainerController.findAll();
 
         assertEquals(200, response.statusCode());
-        assertEquals("Trainers found", response.message());
+        assertEquals("Success!", response.message());
         assertEquals(trainers, response.data());
 
         verify(trainerService, times(1)).findAll();
@@ -78,15 +75,15 @@ class TrainerControllerTest {
     @Test
     void update() {
         String username = "Jim.Rohn";
-        TrainerRequest request = new TrainerRequest("Jim", "Rohn", 1L);
-        ApiResponse<Void> apiResponse = new ApiResponse<>(204, "Trainer updated", true);
+        TrainerRequest request = new TrainerRequest("Jim", "Rohn", 1L, true);
+        TrainerResponse trainerResponse = new TrainerResponse(1L, username, "Rohn", "Yoga", true, null);
 
-        when(trainerService.update(eq(username), any(TrainerRequest.class))).thenReturn(apiResponse);
+        when(trainerService.update(eq(username), any(TrainerRequest.class))).thenReturn(trainerResponse);
 
-        ApiResponse<Void> response = trainerController.update(username, request);
+        ApiResponse<TrainerResponse> response = trainerController.update(username, request);
 
-        assertEquals(204, response.statusCode());
-        assertEquals("Trainer updated", response.message());
+        assertEquals(200, response.statusCode());
+        assertEquals("Successfully updated!", response.message());
 
         verify(trainerService, times(1)).update(eq(username), any(TrainerRequest.class));
         verifyNoMoreInteractions(trainerService);
@@ -104,14 +101,13 @@ class TrainerControllerTest {
                 new TrainingResponse(1L, 1L, 1L, "Iman.Gadzhi", "GYM", LocalDate.of(2023, 5, 1), Duration.ZERO),
                 new TrainingResponse(2L, 1L, 1L, "Iman.Gadzhi", "GYM",LocalDate.of(2023, 6, 15), Duration.ZERO)
         );
-        ApiResponse<List<TrainingResponse>> apiResponse = new ApiResponse<>(200, trainings, "Trainings found", true);
 
-        when(trainingService.getTrainingsByTrainer(username, fromDate, toDate, traineeName)).thenReturn(apiResponse);
+        when(trainingService.getTrainingsByTrainer(username, fromDate, toDate, traineeName)).thenReturn(trainings);
 
         ApiResponse<List<TrainingResponse>> response = trainerController.getTrainerTrainings(username, fromDate, toDate, traineeName);
 
         assertEquals(200, response.statusCode());
-        assertEquals("Trainings found", response.message());
+        assertEquals("Successfully found!", response.message());
         assertEquals(trainings, response.data());
         verify(trainingService, times(1)).getTrainingsByTrainer(username, fromDate, toDate, traineeName);
         verifyNoMoreInteractions(trainingService);
@@ -122,14 +118,11 @@ class TrainerControllerTest {
         String username = "John.Doe";
         String oldPassword = "oldPassword123";
         String newPassword = "newPassword456";
-        ApiResponse<Void> apiResponse = new ApiResponse<>(204, "Password updated successfully", true);
-
-        when(trainerService.updatePassword(username, oldPassword, newPassword)).thenReturn(apiResponse);
 
         ApiResponse<Void> response = trainerController.updatePassword(username, oldPassword, newPassword);
 
-        assertEquals(204, response.statusCode());
-        assertEquals("Password updated successfully", response.message());
+        assertEquals(200, response.statusCode());
+        assertEquals("Password update successful", response.message());
         verify(trainerService, times(1)).updatePassword(username, oldPassword, newPassword);
         verifyNoMoreInteractions(trainerService);
     }
@@ -137,14 +130,11 @@ class TrainerControllerTest {
     @Test
     void deActivateUser() {
         String username = "John.Doe";
-        ApiResponse<Void> apiResponse = new ApiResponse<>(204, "Trainer deactivated", true);
-
-        when(trainerService.deActivateUser(username)).thenReturn(apiResponse);
 
         ApiResponse<Void> response = trainerController.deActivateUser(username);
 
-        assertEquals(204, response.statusCode());
-        assertEquals("Trainer deactivated", response.message());
+        assertEquals(200, response.statusCode());
+        assertEquals("User deActivated successfully", response.message());
         verify(trainerService, times(1)).deActivateUser(username);
         verifyNoMoreInteractions(trainerService);
     }
@@ -152,14 +142,11 @@ class TrainerControllerTest {
     @Test
     void activateUser() {
         String username = "John.Doe";
-        ApiResponse<Void> apiResponse = new ApiResponse<>(204, "Trainer activated", true);
-
-        when(trainerService.activateUser(username)).thenReturn(apiResponse);
 
         ApiResponse<Void> response = trainerController.activateUser(username);
 
-        assertEquals(204, response.statusCode());
-        assertEquals("Trainer activated", response.message());
+        assertEquals(200, response.statusCode());
+        assertEquals("User Activated successfully", response.message());
         verify(trainerService, times(1)).activateUser(username);
         verifyNoMoreInteractions(trainerService);
     }

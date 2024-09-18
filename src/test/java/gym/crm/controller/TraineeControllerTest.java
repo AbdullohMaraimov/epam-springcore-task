@@ -35,14 +35,14 @@ class TraineeControllerTest {
     void update() {
         String username = "Iman.Gadzhi";
         TraineeRequest request = new TraineeRequest("Iman", "Gadzhi", LocalDate.of(2000, 1, 1), "USA", true);
-        ApiResponse<Void> apiResponse = new ApiResponse<>(204, "Trainee updated", true);
+        TraineeResponse traineeResponse = new TraineeResponse(1L, "Iman", "Gadzhi", LocalDate.of(2000, 1, 1), "USA", true, null);
 
-        when(traineeService.update(eq(username), any(TraineeRequest.class))).thenReturn(apiResponse);
+        when(traineeService.update(eq(username), any(TraineeRequest.class))).thenReturn(traineeResponse);
 
-        ApiResponse<Void> response = traineeController.update(username, request);
+        ApiResponse<TraineeResponse> response = traineeController.update(username, request);
 
         assertEquals(204, response.statusCode());
-        assertEquals("Trainee updated", response.message());
+        assertEquals("Successfully updated!", response.message());
 
         verify(traineeService, times(1)).update(eq(username), any(TraineeRequest.class));
         verifyNoMoreInteractions(traineeService);
@@ -51,15 +51,14 @@ class TraineeControllerTest {
     @Test
     void findByUsername() {
         String username = "Iman.Gadzhi";
-        TraineeResponse traineeResponse = new TraineeResponse(1L, "Iman", "Gadzhi", "Iman.Gadzhi", LocalDate.of(2000, 1, 1), "USA", true);
-        ApiResponse<TraineeResponse> apiResponse = new ApiResponse<>(200, traineeResponse, "Trainee found", true);
+        TraineeResponse traineeResponse = new TraineeResponse(1L, "Iman", "Gadzhi", LocalDate.of(2000, 1, 1), "USA", true, null);
 
-        when(traineeService.findByUsername(username)).thenReturn(apiResponse);
+        when(traineeService.findByUsername(username)).thenReturn(traineeResponse);
 
         ApiResponse<TraineeResponse> response = traineeController.findByUsername(username);
 
         assertEquals(200, response.statusCode());
-        assertEquals("Trainee found", response.message());
+        assertEquals("Successfully found!", response.message());
         assertEquals(traineeResponse, response.data());
         verify(traineeService, times(1)).findByUsername(username);
         verifyNoMoreInteractions(traineeService);
@@ -68,18 +67,16 @@ class TraineeControllerTest {
     @Test
     void findAll() {
         List<TraineeResponse> trainees = List.of(
-                new TraineeResponse(1L, "Iman", "Gadzhi", "Iman.Gadzhi", LocalDate.of(2000, 1, 1), "USA", true),
-                new TraineeResponse(1L, "Ali", "Vali", "Ali.Vali", LocalDate.of(2002, 2, 2), "USA", true)
+                new TraineeResponse(1L, "Iman", "Gadzhi", LocalDate.of(2000, 1, 1), "USA", true, null),
+                new TraineeResponse(1L, "Ali", "Vali", LocalDate.of(2002, 2, 2), "USA", true, null)
         );
 
-        ApiResponse<List<TraineeResponse>> apiResponse = new ApiResponse<>(200, trainees, "Trainees found", true);
-
-        when(traineeService.findAll()).thenReturn(apiResponse);
+        when(traineeService.findAll()).thenReturn(trainees);
 
         ApiResponse<List<TraineeResponse>> response = traineeController.findAll();
 
         assertEquals(200, response.statusCode());
-        assertEquals("Trainees found", response.message());
+        assertEquals("Success!", response.message());
         assertEquals(trainees, response.data());
         verify(traineeService, times(1)).findAll();
         verifyNoMoreInteractions(traineeService);
@@ -88,13 +85,10 @@ class TraineeControllerTest {
     @Test
     void deleteByUsername() {
         String username = "Iman.Gadzhi";
-        ApiResponse<Void> apiResponse = new ApiResponse<>(204, "Deleted successfully!", true);
-
-        when(traineeService.delete(username)).thenReturn(apiResponse);
 
         ApiResponse<Void> response = traineeController.deleteByUsername(username);
 
-        assertEquals(204, response.statusCode());
+        assertEquals(200, response.statusCode());
         assertEquals("Deleted successfully!", response.message());
         verify(traineeService, times(1)).delete(username);
         verifyNoMoreInteractions(traineeService);
@@ -102,14 +96,10 @@ class TraineeControllerTest {
 
     @Test
     void deleteAll() {
-        ApiResponse<Void> apiResponse = new ApiResponse<>(204, "All trainees deleted", true);
-
-        when(traineeService.deleteAll()).thenReturn(apiResponse);
-
         ApiResponse<Void> response = traineeController.deleteAll();
 
         assertEquals(204, response.statusCode());
-        assertEquals("All trainees deleted", response.message());
+        assertEquals("All Trainees deleted!", response.message());
         verify(traineeService, times(1)).deleteAll();
         verifyNoMoreInteractions(traineeService);
     }
@@ -117,14 +107,11 @@ class TraineeControllerTest {
     @Test
     void deActivateUser() {
         String username = "Iman.Gadzhi";
-        ApiResponse<Void> apiResponse = new ApiResponse<>(204, "User deactivated", true);
-
-        when(traineeService.deActivateUser(username)).thenReturn(apiResponse);
 
         ApiResponse<Void> response = traineeController.deActivateUser(username);
 
-        assertEquals(204, response.statusCode());
-        assertEquals("User deactivated", response.message());
+        assertEquals(200, response.statusCode());
+        assertEquals("User deActivated successfully", response.message());
         verify(traineeService, times(1)).deActivateUser(username);
         verifyNoMoreInteractions(traineeService);
     }
@@ -134,12 +121,10 @@ class TraineeControllerTest {
         String username = "Iman.Gadzhi";
         ApiResponse<Void> apiResponse = new ApiResponse<>(204, "User activated", true);
 
-        when(traineeService.activateUser(username)).thenReturn(apiResponse);
-
         ApiResponse<Void> response = traineeController.activateUser(username);
 
-        assertEquals(204, response.statusCode());
-        assertEquals("User activated", response.message());
+        assertEquals(200, response.statusCode());
+        assertEquals("User deActivated successfully", response.message());
         verify(traineeService, times(1)).activateUser(username);
         verifyNoMoreInteractions(traineeService);
     }
@@ -148,17 +133,16 @@ class TraineeControllerTest {
     void getAllUnassignedTrainers() {
         String username = "Iman.Gadzhi";
         List<TrainerResponse> trainers = List.of(
-                new TrainerResponse(1L, "John", "Doe", "john.doe", "GYM", true),
-                new TrainerResponse(2L, "Jane", "Doe", "jane.doe", "GYM", true)
+                new TrainerResponse(1L, "John", "Doe", "GYM", true, null),
+                new TrainerResponse(2L, "Jane", "Doe", "GYM", true, null)
         );
-        ApiResponse<List<TrainerResponse>> apiResponse = new ApiResponse<>(200, trainers, "Unassigned trainers found", true);
 
-        when(traineeService.findAllUnassignedTrainers(username)).thenReturn(apiResponse);
+        when(traineeService.findAllUnassignedTrainers(username)).thenReturn(trainers);
 
         ApiResponse<List<TrainerResponse>> response = traineeController.getAllUnassignedTrainers(username);
 
         assertEquals(200, response.statusCode());
-        assertEquals("Unassigned trainers found", response.message());
+        assertEquals("Successfully retrieved", response.message());
         assertEquals(trainers, response.data());
         verify(traineeService, times(1)).findAllUnassignedTrainers(username);
         verifyNoMoreInteractions(traineeService);

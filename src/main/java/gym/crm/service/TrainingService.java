@@ -1,6 +1,5 @@
 package gym.crm.service;
 
-import gym.crm.dto.reponse.ApiResponse;
 import gym.crm.dto.reponse.TrainingResponse;
 import gym.crm.dto.request.TrainingRequest;
 import gym.crm.model.TrainingType;
@@ -10,13 +9,15 @@ import java.util.List;
 
 public interface TrainingService {
 
-    ApiResponse<Void> create(TrainingRequest trainingRequest);
+    void create(TrainingRequest trainingRequest);
 
-    ApiResponse<TrainingResponse> findById(Long id);
+    TrainingResponse findById(Long id);
 
-    ApiResponse<List<TrainingResponse>> findAll();
+    List<TrainingResponse> findAll();
 
-    ApiResponse<List<TrainingResponse>> findTraineeTrainings(String username, LocalDate fromDate, LocalDate toDate, String trainingName, Long trainingTypeId);
+    List<TrainingResponse> findTraineeTrainings(String username, LocalDate fromDate, LocalDate toDate, String trainingName, Long trainingTypeId);
 
-    ApiResponse<List<TrainingResponse>> getTrainingsByTrainer(String username, LocalDate fromDate, LocalDate toDate, String traineeName);
+    List<TrainingResponse> getTrainingsByTrainer(String username, LocalDate fromDate, LocalDate toDate, String traineeName);
+
+    List<TrainingType> findAllTrainingTypes();
 }

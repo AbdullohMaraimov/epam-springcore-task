@@ -3,21 +3,30 @@ package gym.crm.mapper;
 import gym.crm.dto.reponse.TraineeResponse;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.model.Trainee;
+import gym.crm.model.Trainer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 class TraineeMapperTest {
 
+    @Mock
+    private TrainerMapper trainerMapper;
+
+    @InjectMocks
     private TraineeMapper traineeMapper;
 
     @BeforeEach
     void setUp() {
-        traineeMapper = new TraineeMapper();
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
@@ -43,21 +52,26 @@ class TraineeMapperTest {
 
     @Test
     void toTraineeResponse() {
+        List<Trainer> traineeResponses = List.of(
+                new Trainer(1L, null, null, null),
+                new Trainer(2L, null, null, null)
+        );
         Trainee trainee = Trainee.builder()
                 .id(1L)
                 .firstName("Iman")
                 .lastName("Gadzhi")
-                .username("Iman.Gadzhi")
                 .dateOfBirth(LocalDate.of(2000, 1, 1))
                 .address("USA")
                 .isActive(true)
+                .trainers(traineeResponses)
                 .build();
+
+        when (trainerMapper.toTrainerResponses(traineeResponses)).thenReturn(List.of());
 
         TraineeResponse traineeResponse = traineeMapper.toTraineeResponse(trainee);
 
         assertEquals("Iman", traineeResponse.firstName());
         assertEquals("Gadzhi", traineeResponse.lastName());
-        assertEquals("Iman.Gadzhi", traineeResponse.username());
         assertEquals(LocalDate.of(2000, 1, 1), traineeResponse.dateOfBirth());
         assertEquals("USA", traineeResponse.address());
         assertEquals(true, trainee.getIsActive());

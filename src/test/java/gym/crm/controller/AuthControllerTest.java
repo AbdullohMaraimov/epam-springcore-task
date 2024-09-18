@@ -1,6 +1,7 @@
 package gym.crm.controller;
 
 import gym.crm.dto.reponse.ApiResponse;
+import gym.crm.dto.reponse.RegistrationResponse;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.dto.request.TrainerRequest;
 import gym.crm.dto.request.UserLoginRequest;
@@ -32,29 +33,28 @@ class AuthControllerTest {
     @Test
     void registerTrainee() throws IOException {
         TraineeRequest traineeRequest = new TraineeRequest("Iman", "Gadzhi", LocalDate.of(2000, 1, 1), "USA", true);
-        ApiResponse<Void> apiResponse = new ApiResponse<>(201, "Trainee registered successfully", true);
+        RegistrationResponse registrationResponse = new RegistrationResponse("Iman.Gadzhi", "qwerty");
+        when(authService.register(traineeRequest)).thenReturn(registrationResponse);
 
-        when(authService.register(traineeRequest)).thenReturn(apiResponse);
-
-        ApiResponse<Void> response = authController.register(traineeRequest);
+        ApiResponse<RegistrationResponse> response = authController.register(traineeRequest);
 
         assertEquals(201, response.statusCode());
-        assertEquals("Trainee registered successfully", response.message());
+        assertEquals("Saved successfully!", response.message());
         verify(authService, times(1)).register(traineeRequest);
         verifyNoMoreInteractions(authService);
     }
 
     @Test
     void registerTrainer() throws IOException {
-        TrainerRequest trainerRequest = new TrainerRequest("John", "Doe", 1L);
-        ApiResponse<Void> apiResponse = new ApiResponse<>(201, "Trainer registered successfully", true);
+        TrainerRequest trainerRequest = new TrainerRequest("John", "Doe", 1L, true);
+        RegistrationResponse registrationResponse = new RegistrationResponse("John.Doe", "qwerty");
 
-        when(authService.register(trainerRequest)).thenReturn(apiResponse);
+        when(authService.register(trainerRequest)).thenReturn(registrationResponse);
 
-        ApiResponse<Void> response = authController.register(trainerRequest);
+        ApiResponse<RegistrationResponse> response = authController.register(trainerRequest);
 
         assertEquals(201, response.statusCode());
-        assertEquals("Trainer registered successfully", response.message());
+        assertEquals("Saved successfully!", response.message());
         verify(authService, times(1)).register(trainerRequest);
         verifyNoMoreInteractions(authService);
     }
@@ -66,9 +66,9 @@ class AuthControllerTest {
 
         when(authService.login(loginRequest)).thenReturn(token);
 
-        String response = authController.login(loginRequest);
+        ApiResponse<String> login = authController.login(loginRequest);
 
-        assertEquals(token, response);
+        assertEquals(login.data(), token);
         verify(authService, times(1)).login(loginRequest);
         verifyNoMoreInteractions(authService);
     }

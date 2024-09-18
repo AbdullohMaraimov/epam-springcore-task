@@ -1,6 +1,7 @@
 package gym.crm.service.impl;
 
 import gym.crm.dto.reponse.ApiResponse;
+import gym.crm.dto.reponse.RegistrationResponse;
 import gym.crm.dto.reponse.TraineeResponse;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.exception.CustomNotFoundException;
@@ -52,9 +53,9 @@ class TraineeServiceImplTest {
         when(traineeMapper.toTrainee(request)).thenReturn(trainee);
         when(traineeRepository.isUsernameExists(trainee.getUsername())).thenReturn(true);
 
-        ApiResponse<Void> response = traineeService.create(request);
+        RegistrationResponse response = traineeService.create(request);
 
-        assertEquals("Username already exists, so changed it to " + trainee.getUsername(), response.message());
+        assertEquals(response.username(), trainee.getUsername());
 
         verify(traineeMapper, times(1)).toTrainee(request);
         verify(traineeRepository, times(1)).isUsernameExists("Jim.Rohn");
@@ -71,9 +72,9 @@ class TraineeServiceImplTest {
         when(traineeMapper.toTrainee(request)).thenReturn(trainee);
         when(traineeRepository.isUsernameExists(trainee.getUsername())).thenReturn(false);
 
-        ApiResponse<Void> response = traineeService.create(request);
+        RegistrationResponse response = traineeService.create(request);
 
-        assertEquals("Saved successfully!", response.message());
+        assertEquals(trainee.getUsername(), response.username());
 
         verify(traineeMapper, times(1)).toTrainee(request);
         verify(traineeRepository, times(1)).isUsernameExists(trainee.getUsername());
@@ -86,18 +87,20 @@ class TraineeServiceImplTest {
         TraineeRequest request = new TraineeRequest("Jimmy", "Rohn", LocalDate.now(), "USA", true);
         Trainee trainee = new Trainee("Jim", "Rohn", true, LocalDate.now(), "USA");
         Trainee updatedTrainee = new Trainee("Jimmy", "Rohn", true, LocalDate.now(), "USA");
+        TraineeResponse traineeResponse = new TraineeResponse(1L, "Jimmy", "Rohn", LocalDate.now(), "USA", true, null);
 
         when(traineeRepository.findByUsername("Jim.Rohn")).thenReturn(trainee);
         when(traineeMapper.toUpdatedTrainee(trainee, request)).thenReturn(updatedTrainee);
+        when(traineeMapper.toTraineeResponse(updatedTrainee)).thenReturn(traineeResponse);
 
-        ApiResponse<Void> response = traineeService.update("Jim.Rohn", request);
+        TraineeResponse response = traineeService.update("Jim.Rohn", request);
 
-        assertEquals("Successfully updated!", response.message());
+        assertEquals(traineeResponse, response);
 
         verify(traineeRepository, times(1)).findByUsername("Jim.Rohn");
         verify(traineeMapper, times(1)).toUpdatedTrainee(trainee, request);
         verify(traineeRepository, times(1)).update(updatedTrainee);
-        verifyNoMoreInteractions(traineeMapper, traineeRepository);
+        verifyNoMoreInteractions(traineeRepository);
     }
 
     @Test
@@ -129,11 +132,7 @@ class TraineeServiceImplTest {
         trainer.getTrainees().add(trainee);
 
         when(traineeRepository.findByUsername(username)).thenReturn(trainee);
-
-        ApiResponse<Void> response = traineeService.delete(username);
-
-        assertTrue(response.success());
-        assertEquals("Deleted successfully!", response.message());
+        traineeService.delete(username);
 
         verify(traineeRepository, times(1)).deleteTraineeByUsername(username);
         verify(trainingRepository, times(1)).deleteTrainingByTraineeUsername(username);
@@ -163,15 +162,14 @@ class TraineeServiceImplTest {
         Trainee trainee = new Trainee("Jim", "Rohn", true, LocalDate.now(), "USA");
         trainee.setUsername(username);
 
-        TraineeResponse traineeResponse = new TraineeResponse(null, "Jim", "Rohn", username, LocalDate.now(), "USA", true);
+        TraineeResponse traineeResponse = new TraineeResponse(null, "Jim", "Rohn", LocalDate.now(), "USA", true, null);
 
         when(traineeRepository.findByUsername(username)).thenReturn(trainee);
         when(traineeMapper.toTraineeResponse(trainee)).thenReturn(traineeResponse);
 
-        ApiResponse<TraineeResponse> response = traineeService.findByUsername(username);
+        TraineeResponse response = traineeService.findByUsername(username);
 
-        assertEquals("Successfully found!", response.message());
-        assertEquals(traineeResponse, response.data());
+        assertEquals(traineeResponse, response);
 
         verify(traineeRepository, times(1)).findByUsername(username);
         verify(traineeMapper, times(1)).toTraineeResponse(trainee);
@@ -193,15 +191,14 @@ class TraineeServiceImplTest {
     @Test
     public void testFindAllSuccess() {
         List<Trainee> trainees = List.of(new Trainee());
-        List<TraineeResponse> traineeResponses = List.of(new TraineeResponse(null, "Jim", "Rohn", "Jim.Rohn", LocalDate.now(), "USA", true));
+        List<TraineeResponse> traineeResponses = List.of(new TraineeResponse(null, "Jim", "Rohn", LocalDate.now(), "USA", true,null));
 
         when(traineeRepository.findAll()).thenReturn(trainees);
         when(traineeMapper.toTraineeResponses(trainees)).thenReturn(traineeResponses);
 
-        ApiResponse<List<TraineeResponse>> response = traineeService.findAll();
+        List<TraineeResponse> response = traineeService.findAll();
 
-        assertEquals("Success!", response.message());
-        assertEquals(traineeResponses, response.data());
+        assertEquals(traineeResponses, response);
 
         verify(traineeRepository, times(1)).findAll();
         verify(traineeMapper, times(1)).toTraineeResponses(trainees);
@@ -221,9 +218,7 @@ class TraineeServiceImplTest {
 
     @Test
     public void testDeleteAll_Success() {
-        ApiResponse<Void> response = traineeService.deleteAll();
-        assertEquals("All Trainees deleted!", response.message());
-
+        traineeService.deleteAll();
         verify(traineeRepository, times(1)).deleteAll();
         verifyNoMoreInteractions(traineeRepository);
     }
@@ -239,10 +234,7 @@ class TraineeServiceImplTest {
 
         when(traineeRepository.findByUsername(username)).thenReturn(trainee);
 
-        ApiResponse<Void> response = traineeService.updatePassword(username, oldPassword, newPassword);
-
-        assertTrue(response.success());
-        assertEquals("Password successfully updated!", response.message());
+        traineeService.updatePassword(username, oldPassword, newPassword);
 
         verify(traineeRepository, times(1)).findByUsername(username);
         verify(traineeRepository, times(1)).save(trainee);
@@ -260,12 +252,15 @@ class TraineeServiceImplTest {
 
         when(traineeRepository.findByUsername(username)).thenReturn(trainee);
 
-        ApiResponse<Void> response = traineeService.updatePassword(username, oldPassword, newPassword);
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> traineeService.updatePassword(username, oldPassword, newPassword)
+        );
 
-        assertFalse(response.success());
-        assertEquals("Update password operation failed", response.message());
+        assertEquals("Update password operation failed", exception.getMessage());
 
         verify(traineeRepository, times(1)).findByUsername(username);
+        verify(traineeRepository, never()).save(any(Trainee.class));
         verifyNoMoreInteractions(traineeRepository);
     }
 
@@ -278,31 +273,10 @@ class TraineeServiceImplTest {
 
         when(traineeRepository.findByUsername(username)).thenReturn(trainee);
 
-        ApiResponse<Void> response = traineeService.deActivateUser(username);
-
-        assertTrue(response.success());
-        assertEquals("User deActivated successfully", response.message());
+        traineeService.deActivateUser(username);
 
         verify(traineeRepository, times(1)).findByUsername(username);
         verify(traineeRepository, times(1)).save(trainee);
-        verifyNoMoreInteractions(traineeRepository);
-    }
-
-    @Test
-    public void testDeActivateUser_AlreadyInactive() {
-        String username = "Jim.Rohn";
-        Trainee trainee = new Trainee("Jim", "Rohn", true, LocalDate.now(), "USA");
-        trainee.setUsername(username);
-        trainee.setIsActive(false);
-
-        when(traineeRepository.findByUsername(username)).thenReturn(trainee);
-
-        ApiResponse<Void> response = traineeService.deActivateUser(username);
-
-        assertFalse(response.success());
-        assertEquals("User already inactive", response.message());
-
-        verify(traineeRepository, times(1)).findByUsername(username);
         verifyNoMoreInteractions(traineeRepository);
     }
 
@@ -314,32 +288,10 @@ class TraineeServiceImplTest {
         trainee.setIsActive(false);
 
         when(traineeRepository.findByUsername(username)).thenReturn(trainee);
-
-        ApiResponse<Void> response = traineeService.activateUser(username);
-
-        assertTrue(response.success());
-        assertEquals("User deActivated successfully", response.message());
+        traineeService.activateUser(username);
 
         verify(traineeRepository, times(1)).findByUsername(username);
         verify(traineeRepository, times(1)).save(trainee);
-        verifyNoMoreInteractions(traineeRepository);
-    }
-
-    @Test
-    public void testActivateUser_AlreadyActive() {
-        String username = "Jim.Rohn";
-        Trainee trainee = new Trainee("Jim", "Rohn", true, LocalDate.now(), "USA");
-        trainee.setUsername(username);
-        trainee.setIsActive(true);
-
-        when(traineeRepository.findByUsername(username)).thenReturn(trainee);
-
-        ApiResponse<Void> response = traineeService.activateUser(username);
-
-        assertFalse(response.success());
-        assertEquals("User already active", response.message());
-
-        verify(traineeRepository, times(1)).findByUsername(username);
         verifyNoMoreInteractions(traineeRepository);
     }
 

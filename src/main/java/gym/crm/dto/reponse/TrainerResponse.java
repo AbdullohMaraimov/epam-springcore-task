@@ -1,11 +1,13 @@
 package gym.crm.dto.reponse;
 
+import java.util.List;
+
 public record TrainerResponse(
-        Long userId,
+        Long id,
         String firstName,
         String lastName,
-        String username,
         String specialization,
-        boolean isActive
+        boolean isActive,
+        List<TraineeResponse> traineeResponses
 ) {
 }

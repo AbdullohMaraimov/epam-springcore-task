@@ -1,6 +1,5 @@
 package gym.crm.service;
 
-import gym.crm.dto.reponse.ApiResponse;
 import gym.crm.dto.reponse.RegistrationResponse;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.dto.request.TrainerRequest;

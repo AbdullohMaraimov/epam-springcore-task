@@ -156,8 +156,8 @@ public class DataInitializer {
                     }
 
                     TrainingRequest training = new TrainingRequest(
-                            traineeService.findByUsername(traineeUsername).data().userId(),
-                            trainerService.findByUsername(trainerUsername).data().id(),
+                            traineeService.findByUsername(traineeUsername).userId(),
+                            trainerService.findByUsername(trainerUsername).id(),
                             trainingName,
                             trainingType.getId(),
                             trainingDate,

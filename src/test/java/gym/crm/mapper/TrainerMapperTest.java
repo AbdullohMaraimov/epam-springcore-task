@@ -1,24 +1,32 @@
 package gym.crm.mapper;
 
+import gym.crm.dto.reponse.TraineeResponse;
 import gym.crm.dto.reponse.TrainerResponse;
 import gym.crm.dto.request.TrainerRequest;
+import gym.crm.model.Trainee;
 import gym.crm.model.Trainer;
 import gym.crm.model.TrainingType;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class TrainerMapperTest {
 
-    private TrainerMapper trainerMapper;
+    @Mock
+    private TraineeMapper traineeMapper;
 
-    @BeforeEach
-    void setUp() {
-        trainerMapper = new TrainerMapper();
-    }
+    @InjectMocks
+    private TrainerMapper trainerMapper;
 
     @Test
     void toTrainer() {
@@ -31,51 +39,67 @@ class TrainerMapperTest {
 
         Trainer trainer = trainerMapper.toTrainer(trainerRequest);
 
-        assertEquals("Iman", trainer.getFirstName());
-        assertEquals("Gadzhi", trainer.getLastName());
+        assertEquals(trainerRequest.firstName(), trainer.getFirstName());
+        assertEquals(trainerRequest.lastName(), trainer.getLastName());
         assertEquals("Iman.Gadzhi", trainer.getUsername());
     }
 
     @Test
     void toTrainerResponse() {
+        List<Trainee> trainees = List.of(
+                new Trainee("Ali", "Valiev", true, LocalDate.of(2000, 1, 1), "USA"),
+                new Trainee("Vali", "Aliev", true, LocalDate.of(2000, 1, 1), "USA")
+        );
+
+        List<TraineeResponse> traineeResponses = List.of(
+                new TraineeResponse(1L, "Ali", "Valiev", LocalDate.of(2000, 1, 1), "USA",   true, List.of()),
+                new TraineeResponse(1L, "Vali","Aliev", LocalDate.of(2000, 1, 1), "USA", true, List.of()));
+
         Trainer trainer = new Trainer();
         trainer.setFirstName("Iman");
         trainer.setLastName("Gadzhi");
         trainer.setUsername("Iman.Gadzhi");
         trainer.setSpecialization(new TrainingType(1L, "GYM"));
         trainer.setIsActive(true);
+        trainer.setTrainees(trainees);
 
-        TrainerResponse response = trainerMapper.toTrainerResponse(trainer);
+        when(traineeMapper.toTraineeResponses(trainees)).thenReturn(traineeResponses);
 
-        assertEquals(trainer.getFirstName(), response.firstName());
-        assertEquals(trainer.getLastName(), response.lastName());
-        assertEquals(trainer.getSpecialization().getName(), response.specialization());
-        assertEquals(trainer.getIsActive(), response.isActive());
+        TrainerResponse trainerResponse = trainerMapper.toTrainerResponse(trainer);
+
+        assertEquals(trainer.getFirstName(), trainerResponse.firstName());
+        assertEquals(trainer.getLastName(), trainerResponse.lastName());
+        assertEquals(trainer.getSpecialization().getName(), trainerResponse.specialization());
+        assertEquals(trainer.getIsActive(), trainerResponse.isActive());
+        assertEquals(trainees.size(), trainerResponse.traineeResponses().size());
+        verify(traineeMapper).toTraineeResponses(trainees);
     }
 
     @Test
     void toTrainerResponses() {
-        Trainer trainer1 = new Trainer();
-        trainer1.setId(1L);
-        trainer1.setFirstName("Iman");
-        trainer1.setLastName("Gadzhi");
-        trainer1.setUsername("Iman.Gadzhi");
-        trainer1.setSpecialization(new TrainingType(1L, "GYM"));
-        trainer1.setIsActive(true);
+        List<Trainer> trainers = List.of(
+                Trainer.builder()
+                        .id(1L)
+                        .firstName("Iman")
+                        .lastName("Gadzhi")
+                        .specialization(new TrainingType(1L, "Fitness"))
+                        .isActive(true)
+                        .trainees(List.of())
+                        .build(),
 
-        Trainer trainer2 = new Trainer();
-        trainer2.setId(1L);
-        trainer2.setFirstName("John");
-        trainer2.setLastName("Doe");
-        trainer2.setUsername("John.Doe");
-        trainer2.setSpecialization(new TrainingType(2L, "GYM"));
-        trainer2.setIsActive(false);
+                Trainer.builder()
+                        .id(2L)
+                        .firstName("Jim")
+                        .lastName("Rohn")
+                        .specialization(new TrainingType(2L, "Motivation"))
+                        .isActive(true)
+                        .trainees(List.of())
+                        .build()
+        );
 
-        List<Trainer> trainers = List.of(trainer1, trainer2);
+        List<TrainerResponse> trainerResponses = trainerMapper.toTrainerResponses(trainers);
 
-        List<TrainerResponse> responses = trainerMapper.toTrainerResponses(trainers);
-
-        assertEquals(2, responses.size());
+        assertEquals(trainers.size(), trainerResponses.size());
     }
 
     @Test
@@ -97,5 +121,4 @@ class TrainerMapperTest {
         assertEquals("John", updatedTrainer.getFirstName());
         assertEquals("Doe", updatedTrainer.getLastName());
         assertEquals("GYM", updatedTrainer.getSpecialization().getName());
-    }
-}
+    }}

@@ -1,5 +1,6 @@
 package gym.crm.controller;
 
+import gym.crm.controller.documentation.TrainerControllerDocumentation;
 import gym.crm.dto.reponse.ApiResponse;
 import gym.crm.dto.reponse.TrainerResponse;
 import gym.crm.dto.reponse.TrainingResponse;
@@ -21,16 +22,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/trainer")
 @RequiredArgsConstructor
-public class TrainerController {
+public class TrainerController implements TrainerControllerDocumentation {
 
     private final TrainerService trainerService;
     private final TrainingService trainingService;
 
-    @Operation(summary = "Find a trainer by username", description = "Fetch trainer details using username")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Trainer found",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = TrainerResponse.class)))
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Trainer not found",
-            content = @Content)
+
     @GetMapping("/{username}")
     public ApiResponse<TrainerResponse> findByUsername(@PathVariable String username) {
         log.info("Finding trainer with username {}", username);
@@ -38,12 +35,6 @@ public class TrainerController {
         return new ApiResponse<>(200,true, trainerResponse, "Successfully found!");
     }
 
-
-    @Operation(summary = "Fetch all trainers", description = "Get a list of all trainers")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "List of trainers retrieved successfully",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = TrainerResponse.class)))
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "No trainers found",
-            content = @Content)
     @GetMapping
     public ApiResponse<List<TrainerResponse>> findAll() {
         log.info("Finding all trainers");
@@ -51,10 +42,6 @@ public class TrainerController {
         return new ApiResponse<>(200,true, trainerResponses, "Success!");
     }
 
-
-    @Operation(summary = "Get trainer's trainings", description = "Fetch a list of trainings for a specific trainer between optional date range and filtered by trainee name")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "List of trainings retrieved successfully",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = TrainingResponse.class)))
     @GetMapping("/{username}/trainings")
     public ApiResponse<List<TrainingResponse>> getTrainerTrainings(@PathVariable String username,
                                                                    @RequestParam(required = false) LocalDate fromDate,
@@ -64,14 +51,9 @@ public class TrainerController {
                 username, fromDate, toDate, traineeName);
 
         List<TrainingResponse> responses = trainingService.getTrainingsByTrainer(username, fromDate, toDate, traineeName);
-        return new ApiResponse<>(200, responses, "Successfully found!", true);
+        return new ApiResponse<>(200, true, responses, "Successfully found!");
     }
 
-
-    @Operation(summary = "Update trainer", description = "Update an existing trainer's details by username")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Trainer updated successfully",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = TrainerResponse.class)))
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Trainer not found")
     @PutMapping("/{username}")
     public ApiResponse<TrainerResponse> update(@PathVariable String username,@Valid @RequestBody TrainerRequest request) {
         log.info("Updating trainer with username {}: {}", username, request);
@@ -79,10 +61,6 @@ public class TrainerController {
         return new ApiResponse<>(200,true, trainerResponse, "Successfully updated!");
     }
 
-
-    @Operation(summary = "Update trainer password", description = "Change the password of a trainer")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Password updated successfully")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Old password is incorrect")
     @PatchMapping("/update-password")
     public ApiResponse<Void> updatePassword(@RequestParam String username,
                                             @RequestParam String oldPassword,
@@ -92,10 +70,6 @@ public class TrainerController {
         return new ApiResponse<>(200, "Password update successful", true);
     }
 
-
-    @Operation(summary = "Deactivate a trainer", description = "Deactivate a trainer by username")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Trainer deactivated successfully")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Trainer not found")
     @PatchMapping("/de-activate")
     public ApiResponse<Void> deActivateUser(@RequestParam String username) {
         log.info("Deactivating trainer {}", username);
@@ -103,10 +77,6 @@ public class TrainerController {
         return new ApiResponse<>(200, "User deActivated successfully", true);
     }
 
-
-    @Operation(summary = "Activate a trainer", description = "Activate a trainer by username")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Trainer activated successfully")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Trainer not found")
     @PatchMapping("/activate")
     public ApiResponse<Void> activateUser(@RequestParam String username) {
         log.info("Activating trainer {}", username);

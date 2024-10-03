@@ -5,10 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@SuperBuilder
 @Setter
 @Getter
 @AllArgsConstructor
@@ -16,18 +18,14 @@ import java.util.List;
 @Entity
 public class Trainer extends User{
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     @ManyToOne
     private TrainingType specialization;
 
-    @OneToMany(mappedBy = "trainer")
+    @OneToMany(mappedBy = "trainer", fetch = FetchType.LAZY)
     private List<Training> trainings = new ArrayList<>();
 
     @ManyToMany(mappedBy = "trainers")
-    private List<Trainee> trainees;
+    private List<Trainee> trainees = new ArrayList<>();
 
     public void addTrainee(Trainee trainee) {
         trainees.add(trainee);

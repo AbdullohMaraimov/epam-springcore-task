@@ -1,6 +1,5 @@
 package gym.crm.service.impl;
 
-import gym.crm.dto.reponse.ApiResponse;
 import gym.crm.dto.reponse.RegistrationResponse;
 import gym.crm.dto.reponse.TrainerResponse;
 import gym.crm.dto.request.TraineeRequest;
@@ -15,6 +14,7 @@ import gym.crm.repository.TrainerRepository;
 import gym.crm.repository.TrainingRepository;
 import gym.crm.service.TraineeService;
 import gym.crm.util.PasswordGenerator;
+import gym.crm.util.Utils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,42 +40,41 @@ public class TraineeServiceImpl implements TraineeService {
         log.info("Creating new trainee with request: {}", trainee);
         Trainee newTrainee = traineeMapper.toTrainee(trainee);
         newTrainee.setPassword(PasswordGenerator.generatePassword());
-        RegistrationResponse registrationResponse = null;
-        if(traineeRepository.isUsernameExists(newTrainee.getUsername())) {
-            newTrainee.setUsername(newTrainee.getUsername() + TraineeRepository.index++);
-            traineeRepository.save(newTrainee);
+
+
+        if(traineeRepository.existsTraineeByUsername(newTrainee.getUsername())) {
+            newTrainee.setUsername(newTrainee.getUsername() + Utils.traineeIdx++);
             log.info("Username already exists, changed to {}", newTrainee.getUsername());
-            registrationResponse = new RegistrationResponse(newTrainee.getUsername(), newTrainee.getPassword());
-        } else {
-            registrationResponse = new RegistrationResponse(newTrainee.getUsername(), newTrainee.getPassword());
-            traineeRepository.save(newTrainee);
-            log.info("Trainee saved successfully: {}", newTrainee);
         }
-        return registrationResponse;
+
+        traineeRepository.save(newTrainee);
+        log.info("Trainee saved : {}", newTrainee.getUsername());
+        return new RegistrationResponse(newTrainee.getUsername(), newTrainee.getPassword());
+
     }
 
     @Override
     @Transactional
     public TraineeResponse update(String username, TraineeRequest traineeRequest) {
         log.info("Updating trainee with username: {}", username);
-        Trainee trainee = traineeRepository.findByUsername(username);
-        if (trainee != null) {
-            Trainee updatedTrainee = traineeMapper.toUpdatedTrainee(trainee, traineeRequest);
-            TraineeResponse traineeResponse = traineeMapper.toTraineeResponse(updatedTrainee);
-            traineeRepository.update(updatedTrainee);
-            log.info("Trainee updated successfully: {}", updatedTrainee);
-            return traineeResponse;
-        } else {
-            throw new CustomNotFoundException("Trainee with id %s not found".formatted(username));
-        }
+        Trainee trainee = traineeRepository.findByUsername(username)
+                .orElseThrow(() -> new CustomNotFoundException("Trainee with id %s not found".formatted(username)));
+
+        Trainee updatedTrainee = traineeMapper.toUpdatedTrainee(trainee, traineeRequest);
+        TraineeResponse traineeResponse = traineeMapper.toTraineeResponse(updatedTrainee);
+        traineeRepository.save(updatedTrainee);
+        log.info("Trainee updated successfully: {}", updatedTrainee);
+        return traineeResponse;
     }
 
     @Override
     @Transactional
     public void updatePassword(String username, String oldPassword, String newPassword) {
         log.info("Updating password for username {}", username);
-        Trainee trainee = traineeRepository.findByUsername(username);
-        if (trainee == null || !Objects.equals(trainee.getPassword(), oldPassword)) {
+        Trainee trainee = traineeRepository.findByUsername(username)
+                .orElseThrow(() -> new CustomNotFoundException("Trainee with username %s not found".formatted(username)));
+
+        if (!Objects.equals(trainee.getPassword(), oldPassword)) {
             throw new IllegalArgumentException("Update password operation failed");
         }
         trainee.setPassword(newPassword);
@@ -85,10 +84,9 @@ public class TraineeServiceImpl implements TraineeService {
     @Override
     public void deActivateUser(String username) {
         log.info("Deactivating user with username: {}", username);
-        Trainee trainee = traineeRepository.findByUsername(username);
-        if (trainee == null) {
-            throw new IllegalArgumentException("DeActivate operation failed, because trinee is not found!");
-        }
+        Trainee trainee = traineeRepository.findByUsername(username)
+                .orElseThrow(() -> new CustomNotFoundException("Trainee with username %s not found".formatted(username)));
+
         if (!trainee.getIsActive()) {
             throw new IllegalArgumentException("User already inactive");
         }
@@ -99,10 +97,9 @@ public class TraineeServiceImpl implements TraineeService {
     @Override
     public void activateUser(String username) {
         log.info("Activating user with username: {}", username);
-        Trainee trainee = traineeRepository.findByUsername(username);
-        if (trainee == null) {
-            throw new IllegalArgumentException("Activate operation failed");
-        }
+        Trainee trainee = traineeRepository.findByUsername(username)
+                .orElseThrow(() -> new CustomNotFoundException("Trainee with username %s not found".formatted(username)));
+
         if (trainee.getIsActive()) {
             throw new IllegalArgumentException("User already active");
         }
@@ -114,29 +111,25 @@ public class TraineeServiceImpl implements TraineeService {
     @Transactional
     public void delete(String username) {
         log.info("Deleting trainee with username: {}", username);
-        Trainee trainee = traineeRepository.findByUsername(username);
-        if (trainee != null) {
-            for (Trainer trainer : trainee.getTrainers()) {
-                trainer.getTrainees().remove(trainee);
-                trainerRepository.update(trainer);
-            }
-            trainingRepository.deleteTrainingByTraineeUsername(username);
-            traineeRepository.deleteTraineeByUsername(username);
-            log.info("Trainee with username {} deleted successfully", username);
-        } else {
-            throw new CustomNotFoundException("Trainee with username %s not found".formatted(username));
+        Trainee trainee = traineeRepository.findByUsername(username)
+                .orElseThrow(() -> new CustomNotFoundException("Trainee with username %s not found".formatted(username)));
+
+        for (Trainer trainer : trainee.getTrainers()) {
+            trainer.getTrainees().remove(trainee);
+            trainerRepository.save(trainer);
         }
+        trainingRepository.deleteByTraineeUsername(username);
+        traineeRepository.deleteByUsername(username);
+        log.info("Trainee with username {} deleted successfully", username);
     }
 
     @Override
     public TraineeResponse findByUsername(String username) {
         log.info("Finding trainee with username: {}", username);
-        Trainee trainee = traineeRepository.findByUsername(username);
-        if (trainee != null) {
-            return traineeMapper.toTraineeResponse(trainee);
-        } else {
-            throw new CustomNotFoundException("Trainee with username %s not found".formatted(username));
-        }
+        Trainee trainee = traineeRepository.findByUsername(username)
+                .orElseThrow(() -> new CustomNotFoundException("Trainee with username %s not found".formatted(username)));
+
+        return traineeMapper.toTraineeResponse(trainee);
     }
 
     @Override
@@ -152,10 +145,9 @@ public class TraineeServiceImpl implements TraineeService {
     @Override
     public List<TrainerResponse> findAllUnassignedTrainers(String username) {
         log.info("Finding all unassigned trainers for trainee with username: {}", username);
-        Trainee trainee = traineeRepository.findByUsername(username);
-        if (trainee == null) {
-            throw new CustomNotFoundException("Trainer with username %s not found".formatted(username));
-        }
+        Trainee trainee = traineeRepository.findByUsername(username)
+                .orElseThrow(() -> new CustomNotFoundException("Trainee with username %s not found".formatted(username)));
+
         List<Trainer> trainers = trainee.getTrainers();
         List<Trainer> allTrainers = trainerRepository.findAll();
         allTrainers.removeAll(trainers);

@@ -9,5 +9,4 @@ public record TrainerResponse(
         String specialization,
         boolean isActive,
         List<TraineeResponse> traineeResponses
-) {
-}
+) {}

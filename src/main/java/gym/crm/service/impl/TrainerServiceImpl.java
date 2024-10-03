@@ -1,6 +1,5 @@
 package gym.crm.service.impl;
 
-import gym.crm.dto.reponse.ApiResponse;
 import gym.crm.dto.reponse.RegistrationResponse;
 import gym.crm.dto.reponse.TrainerResponse;
 import gym.crm.dto.request.TrainerRequest;
@@ -12,6 +11,7 @@ import gym.crm.repository.TrainerRepository;
 import gym.crm.repository.TrainingTypeRepository;
 import gym.crm.service.TrainerService;
 import gym.crm.util.PasswordGenerator;
+import gym.crm.util.Utils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,13 +37,12 @@ public class TrainerServiceImpl implements TrainerService {
         log.debug("Creating new trainer with request: {}", trainerRequest);
         Trainer trainer = trainerMapper.toTrainer(trainerRequest);
         trainer.setPassword(PasswordGenerator.generatePassword());
-        TrainingType trainingType = trainingTypeRepository.findById(trainerRequest.specializationId());
-        if (trainingType == null) {
-            throw new CustomNotFoundException("TrainingType with id : %d not found".formatted(trainerRequest.specializationId()));
-        }
+        TrainingType trainingType = trainingTypeRepository.findById(trainerRequest.specializationId())
+                .orElseThrow(() -> new CustomNotFoundException("TrainingType with id : %d not found".formatted(trainerRequest.specializationId())));
+
         trainer.setSpecialization(trainingType);
-        if (trainerRepository.isUsernameExists(trainer.getUsername())) {
-            trainer.setUsername(trainer.getUsername() + TrainerRepository.index++);
+        if (trainerRepository.existsTrainerByUsername(trainer.getUsername())) {
+            trainer.setUsername(trainer.getUsername() +  Utils.trainerIdx++);
             log.info("Username already exists, changed it to {}", trainer.getUsername());
         }
         RegistrationResponse registrationResponse = new RegistrationResponse(trainer.getUsername(), trainer.getPassword());
@@ -56,18 +55,15 @@ public class TrainerServiceImpl implements TrainerService {
     @Transactional
     public TrainerResponse update(String username, TrainerRequest trainerRequest) {
         log.debug("Updating trainer with username: {}", username);
-        Trainer trainer = trainerRepository.findByUsername(username);
-        if (trainer == null) {
-            log.error("Trainer with username %s not found".formatted(username));
-            throw new CustomNotFoundException("Trainer not found!");
-        }
+        Trainer trainer = trainerRepository.findByUsername (username)
+                .orElseThrow(() -> new CustomNotFoundException("Trainer not found!"));
+
         Trainer updated = trainerMapper.toUpdatedTrainer(trainer, trainerRequest);
-        TrainingType trainingType = trainingTypeRepository.findById(trainerRequest.specializationId());
-        if (trainingType == null) {
-            throw new CustomNotFoundException("TrainingType with id : %d not found".formatted(trainerRequest.specializationId()));
-        }
+        TrainingType trainingType = trainingTypeRepository.findById(trainerRequest.specializationId())
+                .orElseThrow(() -> new CustomNotFoundException("TrainingType with id : %d not found".formatted(trainerRequest.specializationId())));
+
         updated.setSpecialization(trainingType);
-        trainerRepository.update(updated);
+        trainerRepository.save(updated);
 
         TrainerResponse trainerResponse = trainerMapper.toTrainerResponse(updated);
 
@@ -79,10 +75,9 @@ public class TrainerServiceImpl implements TrainerService {
     @Transactional
     public void updatePassword(String username, String oldPassword, String newPassword) {
         log.debug("Updating password for trainer {}", username);
-        Trainer trainer = trainerRepository.findByUsername(username);
-        if (trainer == null){
-            throw new CustomNotFoundException("Trainer not found!");
-        }
+        Trainer trainer = trainerRepository.findByUsername(username)
+                .orElseThrow(() -> new CustomNotFoundException("Trainer not found!"));
+
         if (!Objects.equals(trainer.getPassword(), oldPassword)) {
             throw new IllegalArgumentException("Old password is incorrect");
         }
@@ -95,11 +90,9 @@ public class TrainerServiceImpl implements TrainerService {
     @Transactional
     public void deActivateUser(String username) {
         log.debug("Deactivating trainer with username {}", username);
-        Trainer trainer = trainerRepository.findByUsername(username);
-        if (trainer == null) {
-            log.error("Trainer with username {} not found", username);
-            throw new CustomNotFoundException("Trainer not found!");
-        }
+        Trainer trainer = trainerRepository.findByUsername(username)
+                .orElseThrow(() -> new CustomNotFoundException("Trainer not found!"));
+
         if (!trainer.getIsActive()) {
             log.warn("Trainer {} is already inactive", username);
             throw new IllegalArgumentException("Trainer is already inactive");
@@ -113,11 +106,9 @@ public class TrainerServiceImpl implements TrainerService {
     @Transactional
     public void activateUser(String username) {
         log.debug("Activating trainer with username {}", username);
-        Trainer trainer = trainerRepository.findByUsername(username);
-        if (trainer == null) {
-            log.error("Trainer with username {} not found", username);
-            throw new CustomNotFoundException("Trainer not found!");
-        }
+        Trainer trainer = trainerRepository.findByUsername(username)
+                .orElseThrow(() -> new CustomNotFoundException("Trainer not found!"));
+
         if (trainer.getIsActive()) {
             log.warn("Trainer {} is already active", username);
             throw new IllegalArgumentException("Trainer is already active");
@@ -130,11 +121,9 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     public TrainerResponse findByUsername(String username) {
         log.debug("Finding trainer with username: {}", username);
-        Trainer trainer = trainerRepository.findByUsername(username);
-        if (trainer == null) {
-            log.error("Trainer with username %s not found".formatted(username));
-            throw new CustomNotFoundException("Trainer not found!");
-        }
+        Trainer trainer = trainerRepository.findByUsername(username)
+                .orElseThrow(() -> new CustomNotFoundException("Trainer not found!"));
+
         TrainerResponse trainerResponse = trainerMapper.toTrainerResponse(trainer);
         log.info("Trainer found: {}", trainerResponse);
         return trainerResponse;

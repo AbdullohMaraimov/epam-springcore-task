@@ -10,8 +10,4 @@ public record ApiResponse<T> (
     public ApiResponse(int statusCode, String message, boolean status) {
         this(statusCode, status, null, message);
     }
-
-    public ApiResponse(int statusCode, T data, String message, boolean status) {
-        this(statusCode, status, data, message);
-    }
 }

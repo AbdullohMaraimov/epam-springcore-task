@@ -6,8 +6,10 @@ import gym.crm.model.Trainee;
 import gym.crm.model.Trainer;
 import gym.crm.model.Training;
 import gym.crm.model.TrainingType;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -15,14 +17,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(MockitoExtension.class)
 class TrainingMapperTest {
 
+    @InjectMocks
     private TrainingMapper trainingMapper;
-
-    @BeforeEach
-    void setUp() {
-        trainingMapper = new TrainingMapper();
-    }
 
     @Test
     void toEntity() {

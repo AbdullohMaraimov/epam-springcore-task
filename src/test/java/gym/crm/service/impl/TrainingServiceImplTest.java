@@ -1,6 +1,5 @@
 package gym.crm.service.impl;
 
-import gym.crm.dto.reponse.ApiResponse;
 import gym.crm.dto.reponse.TrainingResponse;
 import gym.crm.dto.request.TrainingRequest;
 import gym.crm.exception.CustomNotFoundException;
@@ -13,20 +12,22 @@ import gym.crm.repository.TraineeRepository;
 import gym.crm.repository.TrainerRepository;
 import gym.crm.repository.TrainingRepository;
 import gym.crm.repository.TrainingTypeRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class TrainingServiceImplTest {
 
     @Mock
@@ -44,17 +45,13 @@ class TrainingServiceImplTest {
     @Mock
     private TrainingTypeRepository trainingTypeRepository;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
-
     @InjectMocks
     private TrainingServiceImpl trainingService;
 
+
     @Test
     void createTrainingSuccessfully() {
-        TrainingRequest trainingRequest = new TrainingRequest(1L, 1L, "", 1L,LocalDate.now(), Duration.ofDays(1L));
+        TrainingRequest trainingRequest = new TrainingRequest(1L, 1L, "", 1L, LocalDate.now(), Duration.ofDays(1L));
         Trainer trainer = new Trainer();
         trainer.setTrainees(new ArrayList<>());
         trainer.setId(1L);
@@ -67,19 +64,19 @@ class TrainingServiceImplTest {
 
         Training training = new Training();
 
-        when(trainerRepository.findById(1L)).thenReturn(trainer);
-        when(traineeRepository.findById(1L)).thenReturn(trainee);
-        when(trainingTypeRepository.findById(1L)).thenReturn(trainingType);
+        when(trainerRepository.findByIdWithTrainees(1L)).thenReturn(Optional.of(trainer));
+        when(traineeRepository.findByIdWithTrainers(1L)).thenReturn(Optional.of(trainee));
+        when(trainingTypeRepository.findById(1L)).thenReturn(Optional.of(trainingType));
         when(trainingMapper.toEntity(trainingRequest)).thenReturn(training);
 
         trainingService.create(trainingRequest);
 
-        verify(trainerRepository, times(1)).findById(1L);
-        verify(traineeRepository, times(1)).findById(1L);
+        verify(trainerRepository, times(1)).findByIdWithTrainees(1L);
+        verify(traineeRepository, times(1)).findByIdWithTrainers(1L);
         verify(trainingMapper, times(1)).toEntity(trainingRequest);
         verify(trainingRepository, times(1)).save(training);
-        verify(traineeRepository, times(1)).update(trainee);
-        verify(trainerRepository, times(1)).update(trainer);
+        verify(traineeRepository, times(1)).save(trainee);
+        verify(trainerRepository, times(1)).save(trainer);
         verifyNoMoreInteractions(trainerRepository, traineeRepository, trainingMapper, trainingRepository);
     }
 
@@ -90,20 +87,20 @@ class TrainingServiceImplTest {
 
         TrainingRequest trainingRequest = new TrainingRequest(1L, 2L, "", 1L,LocalDate.now(), Duration.ofDays(1L));
 
-        when(trainerRepository.findById(trainerId)).thenReturn(null);
+        when(trainerRepository.findByIdWithTrainees(trainerId)).thenReturn(Optional.empty());
 
         CustomNotFoundException e = assertThrows(CustomNotFoundException.class,
                 () -> trainingService.create(trainingRequest));
 
         assertEquals(e.getMessage(), "Trainer not found with id: %d".formatted(trainerId));
 
-        verify(trainerRepository, times(1)).findById(trainerId);
+        verify(trainerRepository, times(1)).findByIdWithTrainees(trainerId);
         verify(trainingRepository, never()).save(any(Training.class));
     }
 
     @Test
     void findByIdFails() {
-        when(trainingRepository.findById(1L)).thenReturn(null);
+        when(trainingRepository.findById(1L)).thenReturn(Optional.empty());
         CustomNotFoundException exception = assertThrows(CustomNotFoundException.class, () -> {
             trainingService.findById(1L);
         });
@@ -121,7 +118,7 @@ class TrainingServiceImplTest {
                 1L, 1L, 1L, "", "GYM", LocalDate.now(), Duration.ZERO
         );
 
-        when(trainingRepository.findById(trainingId)).thenReturn(training);
+        when(trainingRepository.findById(trainingId)).thenReturn(Optional.of(training));
         when(trainingMapper.toResponse(training)).thenReturn(trainingResponse);
 
         TrainingResponse response = trainingService.findById(trainingId);
@@ -135,11 +132,10 @@ class TrainingServiceImplTest {
 
     @Test
     void findAllTrainingsFails() {
-        when(trainingRepository.isTrainingDBEmpty()).thenReturn(true);
         CustomNotFoundException exception = assertThrows(CustomNotFoundException.class,
                 () -> trainingService.findAll());
         assertEquals("Training not found!", exception.getMessage());
-        verify(trainingRepository, times(1)).isTrainingDBEmpty();
+        verify(trainingRepository, times(1)).findAll();
         verifyNoMoreInteractions(trainingRepository);
     }
 
@@ -151,7 +147,6 @@ class TrainingServiceImplTest {
                 new TrainingResponse(1L, 1L, 1L, "", "GYM", LocalDate.now(), Duration.ZERO)
         );
 
-        when(trainingRepository.isTrainingDBEmpty()).thenReturn(false);
         when(trainingRepository.findAll()).thenReturn(trainings);
         when(trainingMapper.toResponses(trainings)).thenReturn(trainingResponses);
 
@@ -159,7 +154,6 @@ class TrainingServiceImplTest {
 
         assertEquals(trainingResponses, response);
 
-        verify(trainingRepository, times(1)).isTrainingDBEmpty();
         verify(trainingRepository, times(1)).findAll();
         verify(trainingMapper, times(1)).toResponses(trainings);
         verifyNoMoreInteractions(trainingRepository, trainingMapper);

@@ -26,7 +26,7 @@ public interface AuthControllerDocumentation {
                     content = @Content(mediaType = "application/json")),
     })
     @PostMapping("/register-trainee")
-    ApiResponse<RegistrationResponse> register(@RequestBody @Valid TraineeRequest dto) throws IOException;
+    ApiResponse<RegistrationResponse> register(@RequestBody @Valid TraineeRequest dto) throws Exception;
 
 
     @Operation(summary = "Register a new trainer", description = "This endpoint registers a new trainer using the provided request data.")
@@ -37,7 +37,7 @@ public interface AuthControllerDocumentation {
                     content = @Content(mediaType = "application/json")),
     })
     @PostMapping("/register-trainer")
-    ApiResponse<RegistrationResponse> register(@RequestBody @Valid TrainerRequest dto) throws IOException;
+    ApiResponse<RegistrationResponse> register(@RequestBody @Valid TrainerRequest dto) throws Exception;
 
 
     @Operation(summary = "Login", description = "This endpoint allows users to login with their username and password. A JWT token is returned upon successful authentication.")

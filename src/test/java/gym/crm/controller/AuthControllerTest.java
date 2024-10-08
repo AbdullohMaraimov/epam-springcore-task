@@ -31,7 +31,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void registerTrainee() throws IOException {
+    void registerTrainee() throws Exception {
         TraineeRequest traineeRequest = new TraineeRequest("Iman", "Gadzhi", LocalDate.of(2000, 1, 1), "USA", true);
         RegistrationResponse registrationResponse = new RegistrationResponse("Iman.Gadzhi", "qwerty");
         when(authService.register(traineeRequest)).thenReturn(registrationResponse);
@@ -45,7 +45,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void registerTrainer() throws IOException {
+    void registerTrainer() throws Exception {
         TrainerRequest trainerRequest = new TrainerRequest("John", "Doe", 1L, true);
         RegistrationResponse registrationResponse = new RegistrationResponse("John.Doe", "qwerty");
 

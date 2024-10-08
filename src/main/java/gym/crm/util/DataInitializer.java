@@ -5,17 +5,19 @@ import com.opencsv.exceptions.CsvException;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.dto.request.TrainerRequest;
 import gym.crm.dto.request.TrainingRequest;
+import gym.crm.dto.request.TrainingTypeRequest;
+import gym.crm.exception.CustomNotFoundException;
+import gym.crm.mapper.TraineeMapper;
 import gym.crm.model.Trainee;
 import gym.crm.model.Trainer;
 import gym.crm.model.TrainingType;
 import gym.crm.repository.TraineeRepository;
 import gym.crm.repository.TrainerRepository;
-import gym.crm.repository.TrainingTypeRepository;
 import gym.crm.service.TraineeService;
 import gym.crm.service.TrainerService;
 import gym.crm.service.TrainingService;
+import gym.crm.service.TrainingTypeService;
 import jakarta.annotation.PostConstruct;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,7 +37,8 @@ import java.util.List;
 public class DataInitializer {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private final TrainingTypeRepository trainingTypeRepository;
+    private final TraineeRepository traineeRepository;
+    private final TrainerRepository trainerRepository;
 
     @Value("${storage.trainee.file}")
     private String traineeDataFile;
@@ -46,31 +49,51 @@ public class DataInitializer {
     @Value("${storage.training.file}")
     private String trainingDataFile;
 
-    private final TraineeRepository traineeRepository;
-    private final TrainerRepository trainerRepository;
+    @Value("${storage.training-type.file}")
+    private String trainingTypeDataFile;
+
+    private final TraineeMapper traineeMapper;
     private final TraineeService traineeService;
     private final TrainerService trainerService;
     private final TrainingService trainingService;
+    private final TrainingTypeService trainingTypeService;
 
     @PostConstruct
-    public void initAll() {
+    public void initAll() throws InterruptedException {
         log.info("Initializing data...");
         initTrainingType();
-        initTrainee();
         initTrainer();
+        initTrainee();
         initTraining();
         log.info("Data initialization complete.");
     }
 
     public void initTrainingType() {
-        if (trainingTypeRepository.findByTrainingName("GYM") == null) {
-            trainingTypeRepository.save("GYM");
+        log.info("Initializing training type data from file...");
+        Resource resource = new ClassPathResource(trainingTypeDataFile);
+
+        try (CSVReader reader = new CSVReader(new InputStreamReader(resource.getInputStream()))) {
+            List<String[]> rows = reader.readAll();
+            for (String[] parts : rows) {
+                if (parts.length == 1) {
+                    String trainingTypeName = parts[0];
+
+                    TrainingTypeRequest trainingTypeRequest = new TrainingTypeRequest(trainingTypeName);
+
+                    trainingTypeService.createTrainingType(trainingTypeRequest);
+                    log.info("Training type created: {}", trainingTypeName);
+                } else {
+                    log.info("Skipping invalid trainee row: {}", String.join(",", parts));
+                }
+            }
+        } catch (IOException | CsvException e) {
+            throw new RuntimeException(e);
         }
     }
 
     public void initTrainee() {
         log.info("Initializing trainee data from file...");
-        Resource resource = new ClassPathResource("trainee-data.csv");
+        Resource resource = new ClassPathResource(traineeDataFile);
 
         try (CSVReader reader = new CSVReader(new InputStreamReader(resource.getInputStream()))) {
             List<String[]> rows = reader.readAll();
@@ -82,15 +105,18 @@ public class DataInitializer {
                     String address = parts[3];
                     boolean isActive = Boolean.parseBoolean(parts[4]);
 
-                    TraineeRequest trainee = new TraineeRequest(
+                    TraineeRequest traineeRequest = new TraineeRequest(
                             firstName,
                             lastName,
                             dateOfBirth,
                             address,
                             isActive
                     );
-                    traineeService.create(trainee);
-                    log.info("Trainee created: {}", trainee);
+
+                    Trainee trainee = traineeMapper.toTrainee(traineeRequest);
+
+                    traineeRepository.save(trainee);
+                    log.info("Trainee created with username: {}", trainee.getUsername());
                 } else {
                     log.info("Skipping invalid trainee row: {}", String.join(",", parts));
                 }
@@ -102,7 +128,7 @@ public class DataInitializer {
 
     public void initTrainer() {
         log.info("Initializing trainer data from file...");
-        Resource resource = new ClassPathResource("trainer-data.csv");
+        Resource resource = new ClassPathResource(trainerDataFile);
 
         try (CSVReader reader = new CSVReader(new InputStreamReader(resource.getInputStream()))) {
             List<String[]> rows = reader.readAll();
@@ -113,7 +139,7 @@ public class DataInitializer {
                     String specializationName = parts[2];
                     boolean isActive = Boolean.parseBoolean(parts[3]);
 
-                    TrainingType trainingType = trainingTypeRepository.findByTrainingName(specializationName);
+                    TrainingType trainingType = trainingTypeService.findByName(specializationName);
 
                     TrainerRequest trainer = new TrainerRequest(
                             firstName,
@@ -132,10 +158,9 @@ public class DataInitializer {
         }
     }
 
-    @Transactional
     public void initTraining() {
         log.info("Initializing training data from file");
-        Resource resource = new ClassPathResource("training-data.csv");
+        Resource resource = new ClassPathResource(trainingDataFile);
 
         try (CSVReader reader = new CSVReader(new InputStreamReader(resource.getInputStream()))) {
             List<String[]> rows = reader.readAll();
@@ -148,33 +173,25 @@ public class DataInitializer {
                     LocalDate trainingDate = LocalDate.parse(parts[4], FORMATTER);
                     Duration duration = Duration.parse(parts[5]);
 
-                    TrainingType trainingType = trainingTypeRepository.findByTrainingName(trainingTypeName);
+                    TrainingType trainingType = trainingTypeService.findByName(trainingTypeName);
 
-                    if (trainingType == null) {
-                        trainingTypeRepository.save(trainingTypeName);
-                        trainingType = trainingTypeRepository.findByTrainingName(trainingTypeName);
-                    }
+                    Trainer trainer = trainerRepository.findByUsername(trainerUsername)
+                            .orElseThrow(() -> new CustomNotFoundException("Trainer not found"));
+
+                    Trainee trainee = traineeRepository.findByUsername(traineeUsername)
+                            .orElseThrow(() -> new CustomNotFoundException("Trainee not found"));
 
                     TrainingRequest training = new TrainingRequest(
-                            traineeService.findByUsername(traineeUsername).userId(),
-                            trainerService.findByUsername(trainerUsername).id(),
+                            trainee.getId(),
+                            trainer.getId(),
                             trainingName,
                             trainingType.getId(),
                             trainingDate,
                             duration
                     );
 
+                    log.info("creating training: {}", training);
                     trainingService.create(training);
-
-                    Trainee trainee = traineeRepository.findByUsername(traineeUsername);
-                    Trainer trainer = trainerRepository.findByUsername(trainerUsername);
-
-                    trainee.addTrainer(trainer);
-                    trainer.addTrainee(trainee);
-
-                    traineeRepository.update(trainee);
-                    trainerRepository.update(trainer);
-
                     log.info("training created: {}", training);
                 } else {
                     log.warn("Skipping invalid training row: {}", String.join(",", parts));
@@ -184,5 +201,4 @@ public class DataInitializer {
             throw new RuntimeException(e);
         }
     }
-
 }

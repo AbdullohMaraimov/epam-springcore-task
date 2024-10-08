@@ -1,6 +1,5 @@
 package gym.crm.service.impl;
 
-import gym.crm.dto.reponse.ApiResponse;
 import gym.crm.dto.reponse.RegistrationResponse;
 import gym.crm.dto.reponse.TraineeResponse;
 import gym.crm.dto.request.TraineeRequest;
@@ -11,20 +10,22 @@ import gym.crm.model.Trainer;
 import gym.crm.repository.TraineeRepository;
 import gym.crm.repository.TrainerRepository;
 import gym.crm.repository.TrainingRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class TraineeServiceImplTest {
 
     @Mock
@@ -39,45 +40,47 @@ class TraineeServiceImplTest {
     @InjectMocks
     private TraineeServiceImpl traineeService;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    @Test
+    void create_Success() {
+        TraineeRequest traineeRequest = new TraineeRequest(
+                "Jim", "Rohn", LocalDate.of(2000, 1, 1), "USA", true
+        );
+        Trainee trainee = Trainee.builder()
+                .firstName(traineeRequest.firstName())
+                .lastName(traineeRequest.lastName())
+                .dateOfBirth(traineeRequest.dateOfBirth())
+                .address(traineeRequest.address())
+                .isActive(traineeRequest.isActive())
+                .username("Jim.Rohn")
+                .build();
+
+        when(traineeMapper.toTrainee(traineeRequest)).thenReturn(trainee);
+        when(traineeRepository.existsTraineeByUsername(trainee.getUsername())).thenReturn(false);
+
+        RegistrationResponse registrationResponse = traineeService.create(traineeRequest);
+
+        assertEquals(trainee.getUsername(), registrationResponse.username());
+
+        verify(traineeMapper, times(1)).toTrainee(traineeRequest);
+        verify(traineeRepository, times(1)).existsTraineeByUsername(any());
+        verify(traineeRepository, times(1)).save(trainee);
+        verifyNoMoreInteractions(traineeMapper, traineeRepository);
     }
 
     @Test
     void testCreate_WhenUsernameExists_ShouldChangeUsername() {
         TraineeRequest request = new TraineeRequest("Jim", "Rohn", LocalDate.now(), "USA", true);
         Trainee trainee = new Trainee("Jim", "Rohn", true, LocalDate.now(), "USA");
-        trainee.setUsername("Jim.Rohn");
+        trainee.setUsername("Jim.Rohn1");
 
         when(traineeMapper.toTrainee(request)).thenReturn(trainee);
-        when(traineeRepository.isUsernameExists(trainee.getUsername())).thenReturn(true);
+        when(traineeRepository.existsTraineeByUsername(trainee.getUsername())).thenReturn(true);
 
         RegistrationResponse response = traineeService.create(request);
-
         assertEquals(response.username(), trainee.getUsername());
 
         verify(traineeMapper, times(1)).toTrainee(request);
-        verify(traineeRepository, times(1)).isUsernameExists("Jim.Rohn");
-        verify(traineeRepository, times(1)).save(trainee);
-        verifyNoMoreInteractions(traineeMapper, traineeRepository);
-    }
-
-    @Test
-    void testCreate_Success() {
-        TraineeRequest request = new TraineeRequest("Jim", "Rohn", LocalDate.now(), "USA", true);
-        Trainee trainee = new Trainee("Jim", "Rohn", true, LocalDate.now(), "USA");
-        trainee.setUsername("Jim.Rohn");
-
-        when(traineeMapper.toTrainee(request)).thenReturn(trainee);
-        when(traineeRepository.isUsernameExists(trainee.getUsername())).thenReturn(false);
-
-        RegistrationResponse response = traineeService.create(request);
-
-        assertEquals(trainee.getUsername(), response.username());
-
-        verify(traineeMapper, times(1)).toTrainee(request);
-        verify(traineeRepository, times(1)).isUsernameExists(trainee.getUsername());
+        verify(traineeRepository, times(1)).existsTraineeByUsername(anyString());
         verify(traineeRepository, times(1)).save(trainee);
         verifyNoMoreInteractions(traineeMapper, traineeRepository);
     }
@@ -89,7 +92,7 @@ class TraineeServiceImplTest {
         Trainee updatedTrainee = new Trainee("Jimmy", "Rohn", true, LocalDate.now(), "USA");
         TraineeResponse traineeResponse = new TraineeResponse(1L, "Jimmy", "Rohn", LocalDate.now(), "USA", true, null);
 
-        when(traineeRepository.findByUsername("Jim.Rohn")).thenReturn(trainee);
+        when(traineeRepository.findByUsername("Jim.Rohn")).thenReturn(Optional.of(trainee));
         when(traineeMapper.toUpdatedTrainee(trainee, request)).thenReturn(updatedTrainee);
         when(traineeMapper.toTraineeResponse(updatedTrainee)).thenReturn(traineeResponse);
 
@@ -99,7 +102,7 @@ class TraineeServiceImplTest {
 
         verify(traineeRepository, times(1)).findByUsername("Jim.Rohn");
         verify(traineeMapper, times(1)).toUpdatedTrainee(trainee, request);
-        verify(traineeRepository, times(1)).update(updatedTrainee);
+        verify(traineeRepository, times(1)).save(updatedTrainee);
         verifyNoMoreInteractions(traineeRepository);
     }
 
@@ -108,7 +111,7 @@ class TraineeServiceImplTest {
         String username = "Jim.Rohn";
         TraineeRequest request = new TraineeRequest("Jimmy", "Rohn", LocalDate.now(), "USA", true);
 
-        when(traineeRepository.findByUsername(username)).thenReturn(null);
+        when(traineeRepository.findByUsername(username)).thenReturn(Optional.empty());
 
         CustomNotFoundException exception = assertThrows(CustomNotFoundException.class, () -> {
             traineeService.update(username, request);
@@ -116,7 +119,7 @@ class TraineeServiceImplTest {
 
         assertEquals("Trainee with id %s not found".formatted(username), exception.getMessage());
 
-        verify(traineeRepository, never()).update(any(Trainee.class));
+        verify(traineeRepository, never()).save(any(Trainee.class));
         verify(traineeMapper, never()).toUpdatedTrainee(any(), any());
     }
 
@@ -127,16 +130,16 @@ class TraineeServiceImplTest {
         trainee.setUsername(username);
         trainee.setTrainers(new ArrayList<>());
 
-        Trainer trainer = new Trainer(null, null, new ArrayList<>(), new ArrayList<>());
+        Trainer trainer = new Trainer(null, new ArrayList<>(), new ArrayList<>());
         trainee.getTrainers().add(trainer);
         trainer.getTrainees().add(trainee);
 
-        when(traineeRepository.findByUsername(username)).thenReturn(trainee);
+        when(traineeRepository.findByUsername(username)).thenReturn(Optional.of(trainee));
         traineeService.delete(username);
 
-        verify(traineeRepository, times(1)).deleteTraineeByUsername(username);
-        verify(trainingRepository, times(1)).deleteTrainingByTraineeUsername(username);
-        verify(trainerRepository, times(1)).update(trainer);
+        verify(traineeRepository, times(1)).deleteByUsername(username);
+        verify(trainingRepository, times(1)).deleteByTraineeUsername(username);
+        verify(trainerRepository, times(1)).save(trainer);
     }
 
     @Test
@@ -145,7 +148,7 @@ class TraineeServiceImplTest {
         Trainee trainee = new Trainee("Jim", "Rohn", true, LocalDate.now(), "USA");
         trainee.setUsername(username);
 
-        when(traineeRepository.findByUsername(username)).thenReturn(null);
+        when(traineeRepository.findByUsername(username)).thenReturn(Optional.empty());
         CustomNotFoundException exception = assertThrows(CustomNotFoundException.class, () -> {
             traineeService.delete(username);
         });
@@ -164,7 +167,7 @@ class TraineeServiceImplTest {
 
         TraineeResponse traineeResponse = new TraineeResponse(null, "Jim", "Rohn", LocalDate.now(), "USA", true, null);
 
-        when(traineeRepository.findByUsername(username)).thenReturn(trainee);
+        when(traineeRepository.findByUsername(username)).thenReturn(Optional.of(trainee));
         when(traineeMapper.toTraineeResponse(trainee)).thenReturn(traineeResponse);
 
         TraineeResponse response = traineeService.findByUsername(username);
@@ -178,7 +181,7 @@ class TraineeServiceImplTest {
 
     @Test
     public void testFindByUsername_NotFound() {
-        when(traineeRepository.findByUsername("username")).thenReturn(null);
+        when(traineeRepository.findByUsername("username")).thenReturn(Optional.empty());
         CustomNotFoundException exception = assertThrows(CustomNotFoundException.class, () -> {
             traineeService.findByUsername("username");
         });
@@ -232,10 +235,11 @@ class TraineeServiceImplTest {
         trainee.setUsername(username);
         trainee.setPassword(oldPassword);
 
-        when(traineeRepository.findByUsername(username)).thenReturn(trainee);
+        when(traineeRepository.findByUsername(username)).thenReturn(Optional.of(trainee));
 
         traineeService.updatePassword(username, oldPassword, newPassword);
 
+        assertEquals(newPassword, trainee.getPassword());
         verify(traineeRepository, times(1)).findByUsername(username);
         verify(traineeRepository, times(1)).save(trainee);
         verifyNoMoreInteractions(traineeRepository);
@@ -250,7 +254,7 @@ class TraineeServiceImplTest {
         trainee.setUsername(username);
         trainee.setPassword("correctOldPassword");
 
-        when(traineeRepository.findByUsername(username)).thenReturn(trainee);
+        when(traineeRepository.findByUsername(username)).thenReturn(Optional.of(trainee));
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
@@ -271,12 +275,33 @@ class TraineeServiceImplTest {
         trainee.setUsername(username);
         trainee.setIsActive(true);
 
-        when(traineeRepository.findByUsername(username)).thenReturn(trainee);
+        when(traineeRepository.findByUsername(username)).thenReturn(Optional.of(trainee));
 
         traineeService.deActivateUser(username);
 
         verify(traineeRepository, times(1)).findByUsername(username);
         verify(traineeRepository, times(1)).save(trainee);
+        verifyNoMoreInteractions(traineeRepository);
+    }
+
+    @Test
+    public void testDeActivateUser_Fails() {
+        String username = "Jim.Rohn";
+        Trainee trainee = new Trainee("Jim", "Rohn", true, LocalDate.now(), "USA");
+        trainee.setUsername(username);
+        trainee.setIsActive(false);
+
+        when(traineeRepository.findByUsername(username)).thenReturn(Optional.of(trainee));
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> traineeService.deActivateUser(username)
+        );
+
+        assertEquals("User already inactive", exception.getMessage());
+
+        verify(traineeRepository, times(1)).findByUsername(username);
+        verify(traineeRepository, times(0)).save(trainee);
         verifyNoMoreInteractions(traineeRepository);
     }
 
@@ -287,7 +312,7 @@ class TraineeServiceImplTest {
         trainee.setUsername(username);
         trainee.setIsActive(false);
 
-        when(traineeRepository.findByUsername(username)).thenReturn(trainee);
+        when(traineeRepository.findByUsername(username)).thenReturn(Optional.of(trainee));
         traineeService.activateUser(username);
 
         verify(traineeRepository, times(1)).findByUsername(username);
@@ -295,4 +320,23 @@ class TraineeServiceImplTest {
         verifyNoMoreInteractions(traineeRepository);
     }
 
+    @Test
+    public void testActivateUser_Fails() {
+        String username = "Jim.Rohn";
+        Trainee trainee = new Trainee("Jim", "Rohn", true, LocalDate.now(), "USA");
+        trainee.setUsername(username);
+
+        when(traineeRepository.findByUsername(username)).thenReturn(Optional.of(trainee));
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> traineeService.activateUser(username)
+        );
+
+        assertEquals("User already active", exception.getMessage());
+
+        verify(traineeRepository, times(1)).findByUsername(username);
+        verify(traineeRepository, times(0)).save(trainee);
+        verifyNoMoreInteractions(traineeRepository);
+    }
 }

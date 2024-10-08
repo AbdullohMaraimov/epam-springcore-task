@@ -7,7 +7,6 @@ import lombok.experimental.SuperBuilder;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @SuperBuilder
 @Getter
@@ -16,10 +15,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 public class Trainee extends User{
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     private LocalDate dateOfBirth;
 

@@ -52,9 +52,9 @@ class TraineeMapperTest {
 
     @Test
     void toTraineeResponse() {
-        List<Trainer> traineeResponses = List.of(
-                new Trainer(1L, null, null, null),
-                new Trainer(2L, null, null, null)
+        List<Trainer> trainerResponses = List.of(
+                new Trainer(),
+                new Trainer()
         );
         Trainee trainee = Trainee.builder()
                 .id(1L)
@@ -63,10 +63,10 @@ class TraineeMapperTest {
                 .dateOfBirth(LocalDate.of(2000, 1, 1))
                 .address("USA")
                 .isActive(true)
-                .trainers(traineeResponses)
+                .trainers(trainerResponses)
                 .build();
 
-        when (trainerMapper.toTrainerResponses(traineeResponses)).thenReturn(List.of());
+        when (trainerMapper.toTrainerResponses(trainerResponses)).thenReturn(List.of());
 
         TraineeResponse traineeResponse = traineeMapper.toTraineeResponse(trainee);
 

@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -39,6 +40,7 @@ public class DataInitializer {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private final TraineeRepository traineeRepository;
     private final TrainerRepository trainerRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${storage.trainee.file}")
     private String traineeDataFile;
@@ -114,6 +116,7 @@ public class DataInitializer {
                     );
 
                     Trainee trainee = traineeMapper.toTrainee(traineeRequest);
+                    trainee.setPassword(passwordEncoder.encode(PasswordGenerator.generatePassword()));
 
                     traineeRepository.save(trainee);
                     log.info("Trainee created with username: {}", trainee.getUsername());

@@ -18,6 +18,7 @@ import gym.crm.util.Utils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,14 +34,16 @@ public class TraineeServiceImpl implements TraineeService {
     private final TraineeRepository traineeRepository;
     private final TrainerRepository trainerRepository;
     private final TrainingRepository trainingRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public RegistrationResponse create(TraineeRequest trainee) {
         log.info("Creating new trainee with request: {}", trainee);
         Trainee newTrainee = traineeMapper.toTrainee(trainee);
-        newTrainee.setPassword(PasswordGenerator.generatePassword());
-
+        String generatedPassword = PasswordGenerator.generatePassword();
+        log.info("Generated password: {}", generatedPassword);
+        newTrainee.setPassword(passwordEncoder.encode(generatedPassword));
 
         if(traineeRepository.existsTraineeByUsername(newTrainee.getUsername())) {
             newTrainee.setUsername(newTrainee.getUsername() + Utils.traineeIdx++);

@@ -10,5 +10,5 @@ public record TraineeResponse(
         LocalDate dateOfBirth,
         String address,
         boolean isActive,
-        List<TrainerResponse> trainers
+        List<Long> trainerIds
 ) {}

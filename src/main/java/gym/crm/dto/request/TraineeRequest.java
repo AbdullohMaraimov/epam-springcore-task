@@ -18,7 +18,6 @@ public record TraineeRequest(
 
         String address,
 
-        @NotBlank(message = "isActive cannot be blank")
         @NotNull(message = "isActive cannot be null")
         boolean isActive
 ) {

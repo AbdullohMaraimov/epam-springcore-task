@@ -8,5 +8,5 @@ public record TrainerResponse(
         String lastName,
         String specialization,
         boolean isActive,
-        List<TraineeResponse> traineeResponses
+        List<Long> traineeIds
 ) {}

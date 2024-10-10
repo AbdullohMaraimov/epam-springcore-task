@@ -8,10 +8,6 @@ import gym.crm.dto.reponse.TrainingResponse;
 import gym.crm.dto.request.TraineeRequest;
 import gym.crm.service.TraineeService;
 import gym.crm.service.TrainingService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +24,6 @@ public class TraineeController implements TraineeControllerDocumentation {
 
     private final TraineeService traineeService;
     private final TrainingService trainingService;
-
 
     @PatchMapping("/{username}")
     public ApiResponse<TraineeResponse> update(@PathVariable String username, @Valid @RequestBody TraineeRequest request) {

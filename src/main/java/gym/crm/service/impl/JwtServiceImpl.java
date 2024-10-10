@@ -41,7 +41,8 @@ public class JwtServiceImpl implements JwtService {
         return Keys.hmacShaKeyFor(key);
     }
 
-    private Claims extractAllClaims(String token) {
+    @Override
+    public Claims extractAllClaims(String token) {
         return Jwts
                 .parser()
                 .verifyWith(getSignKey())

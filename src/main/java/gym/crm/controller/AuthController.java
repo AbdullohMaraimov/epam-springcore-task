@@ -9,9 +9,13 @@ import gym.crm.dto.request.UserLoginRequest;
 import gym.crm.metric.ApiCallService;
 import gym.crm.metric.TimeMeasurementService;
 import gym.crm.service.AuthService;
+import gym.crm.service.JwtBlackListService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -23,6 +27,7 @@ public class AuthController implements AuthControllerDocumentation {
     private final AuthService authService;
     private final ApiCallService apiCallService;
     private final TimeMeasurementService timeMeasurementService;
+    private final JwtBlackListService jwtBlackListService;
 
     @PostMapping("/register-trainee")
     public ApiResponse<RegistrationResponse> register(@RequestBody @Valid TraineeRequest dto) throws Exception {
@@ -46,4 +51,22 @@ public class AuthController implements AuthControllerDocumentation {
         return new ApiResponse<>(200, true, login, "OK");
     }
 
+    @PostMapping("/logout")
+    public ApiResponse<String> logout(HttpServletRequest request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("Logging out with username : {}", username);
+        String extractedJwt = extractJwt(request);
+        if (extractedJwt != null && jwtBlackListService.blackListToken(extractedJwt)) {
+            return new ApiResponse<>(201, "Logout Successful", true);
+        }
+        return new ApiResponse<>(400, "Bad request", false);
+    }
+
+    private String extractJwt(HttpServletRequest request) {
+        String jwt = request.getHeader("Authorization");
+        if (StringUtils.hasText(jwt) && jwt.startsWith("Bearer ")) {
+            return jwt.substring(7);
+        }
+        return null;
+    }
 }

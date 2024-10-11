@@ -1,9 +1,7 @@
 package gym.crm.mapper;
 
-import gym.crm.dto.reponse.TraineeResponse;
 import gym.crm.dto.reponse.TrainerResponse;
 import gym.crm.dto.request.TrainerRequest;
-import gym.crm.model.Trainee;
 import gym.crm.model.Trainer;
 import gym.crm.model.TrainingType;
 import org.junit.jupiter.api.Test;
@@ -12,12 +10,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TrainerMapperTest {
@@ -46,14 +42,9 @@ class TrainerMapperTest {
 
     @Test
     void toTrainerResponse() {
-        List<Trainee> trainees = List.of(
-                new Trainee("Ali", "Valiev", true, LocalDate.of(2000, 1, 1), "USA"),
-                new Trainee("Vali", "Aliev", true, LocalDate.of(2000, 1, 1), "USA")
-        );
-
-        List<TraineeResponse> traineeResponses = List.of(
-                new TraineeResponse(1L, "Ali", "Valiev", LocalDate.of(2000, 1, 1), "USA",   true, List.of()),
-                new TraineeResponse(1L, "Vali","Aliev", LocalDate.of(2000, 1, 1), "USA", true, List.of()));
+        List<Long> traineeIds = new ArrayList<>();
+        traineeIds.add(1L);
+        traineeIds.add(2L);
 
         Trainer trainer = new Trainer();
         trainer.setFirstName("Iman");
@@ -61,9 +52,6 @@ class TrainerMapperTest {
         trainer.setUsername("Iman.Gadzhi");
         trainer.setSpecialization(new TrainingType(1L, "GYM"));
         trainer.setIsActive(true);
-        trainer.setTrainees(trainees);
-
-        when(traineeMapper.toTraineeResponses(trainees)).thenReturn(traineeResponses);
 
         TrainerResponse trainerResponse = trainerMapper.toTrainerResponse(trainer);
 
@@ -71,8 +59,6 @@ class TrainerMapperTest {
         assertEquals(trainer.getLastName(), trainerResponse.lastName());
         assertEquals(trainer.getSpecialization().getName(), trainerResponse.specialization());
         assertEquals(trainer.getIsActive(), trainerResponse.isActive());
-        assertEquals(trainees.size(), trainerResponse.traineeResponses().size());
-        verify(traineeMapper).toTraineeResponses(trainees);
     }
 
     @Test

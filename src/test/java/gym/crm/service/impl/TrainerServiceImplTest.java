@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,6 +30,9 @@ class TrainerServiceImplTest {
 
     @Mock
     private TrainerMapper trainerMapper;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @Mock
     private TrainerRepository trainerRepository;
@@ -54,6 +58,7 @@ class TrainerServiceImplTest {
         try (MockedStatic<PasswordGenerator> mockPasswordGenerator = mockStatic(PasswordGenerator.class)) {
             mockPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(pswd);
 
+            when(passwordEncoder.encode(pswd)).thenReturn(anyString());
             when(trainerMapper.toTrainer(trainerRequest)).thenReturn(trainer);
             when(trainingTypeRepository.findById(1L)).thenReturn(Optional.of(trainingType));
             when(trainerRepository.existsTrainerByUsername("ali.vali")).thenReturn(true);

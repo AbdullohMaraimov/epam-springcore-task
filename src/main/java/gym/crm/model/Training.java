@@ -1,5 +1,8 @@
 package gym.crm.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,10 +25,12 @@ public class Training {
 
     @ManyToOne
     @JoinColumn(name = "trainee_id", nullable = false)
+    @JsonIgnore
     private Trainee trainee;
 
     @ManyToOne
     @JoinColumn(name = "trainer_id", nullable = false)
+    @JsonIgnore
     private Trainer trainer;
 
     private String trainingName;

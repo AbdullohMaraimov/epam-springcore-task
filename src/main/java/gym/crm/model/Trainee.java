@@ -1,5 +1,6 @@
 package gym.crm.model;
 
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -20,7 +21,9 @@ public class Trainee extends User{
 
     private String address;
 
+
     @OneToMany(mappedBy = "trainee", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Training> trainings = new ArrayList<>();
 
     @ManyToMany
@@ -29,6 +32,7 @@ public class Trainee extends User{
             joinColumns = @JoinColumn(name = "trainee_id"),
             inverseJoinColumns = @JoinColumn(name = "trainer_id")
     )
+    @JsonIgnore
     private List<Trainer> trainers;
 
     public Trainee(String firstName, String lastName, Boolean isActive, LocalDate dateOfBirth, String address) {

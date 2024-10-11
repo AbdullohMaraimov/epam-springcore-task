@@ -15,6 +15,7 @@ import gym.crm.util.Utils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,17 +27,18 @@ import java.util.Objects;
 public class TrainerServiceImpl implements TrainerService {
 
     private final TrainerMapper trainerMapper;
-
     private final TrainerRepository trainerRepository;
-
     private final TrainingTypeRepository trainingTypeRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public RegistrationResponse create(TrainerRequest trainerRequest) {
         log.debug("Creating new trainer with request: {}", trainerRequest);
         Trainer trainer = trainerMapper.toTrainer(trainerRequest);
-        trainer.setPassword(PasswordGenerator.generatePassword());
+        String generatedPassword = PasswordGenerator.generatePassword();
+        log.info("Password generated: {}", generatedPassword);
+        trainer.setPassword(passwordEncoder.encode(generatedPassword));
         TrainingType trainingType = trainingTypeRepository.findById(trainerRequest.specializationId())
                 .orElseThrow(() -> new CustomNotFoundException("TrainingType with id : %d not found".formatted(trainerRequest.specializationId())));
 
